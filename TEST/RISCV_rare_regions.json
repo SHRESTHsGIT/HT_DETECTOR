@@ -1,0 +1,102 @@
+{
+  "file_metadata": {
+    "source_file": "RISCV.sv",
+    "total_chunks_analyzed": 3,
+    "chunks_with_rare_regions": 2,
+    "total_rare_regions": 7,
+    "analysis_timestamp": "2025-10-04T12:44:24.090524"
+  },
+  "rare_regions": [
+    {
+      "chunk_id": "chunk_001",
+      "rare_region_type": "RESET_SEQUENCE",
+      "rare_region_code": "always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            baud_counter <= '0;\n            baud_tick <= 1'b0;\n        end else begin\n            if (baud_counter == DIVISOR - 1) begin\n                baud_counter <= '0;\n                baud_tick <= 1'b1;\n            end else begin\n                baud_counter <= baud_counter + 1;\n                baud_tick <= 1'b0;\n            end\n        end\n    end",
+      "activation_trigger": "Asynchronous reset asserted (rst_n deasserted / low) at power-up or reset event",
+      "confidence_score": 0.95,
+      "description": "Reset branch in the baud-rate generator always_ff block. This initialization path executes only when the asynchronous reset is asserted (rare during normal running operation).",
+      "line_in_chunk": 29,
+      "absolute_line": 29,
+      "matched_line_content": "always_ff @(posedge clk or negedge rst_n) begin",
+      "match_type": "first_line_exact",
+      "line_range": "29-42"
+    },
+    {
+      "chunk_id": "chunk_001",
+      "rare_region_type": "RESET_SEQUENCE",
+      "rare_region_code": "always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n)\n            state <= IDLE;\n        else\n            state <= next_state;\n    end",
+      "activation_trigger": "Asynchronous reset asserted (rst_n deasserted / low) to initialize state machine to IDLE",
+      "confidence_score": 0.94,
+      "description": "State register initialization on reset. The 'if (!rst_n)' branch runs only on reset, making this a rare execution region compared to normal state transitions.",
+      "line_in_chunk": 29,
+      "absolute_line": 29,
+      "matched_line_content": "always_ff @(posedge clk or negedge rst_n) begin",
+      "match_type": "first_line_exact",
+      "line_range": "29-34"
+    },
+    {
+      "chunk_id": "chunk_001",
+      "rare_region_type": "RARE_DEFAULT_RECOVERY",
+      "rare_region_code": "            default: next_state = IDLE;\n        endcase\n    end",
+      "activation_trigger": "Encountering an undefined/invalid state value (state not matched by IDLE/START_BIT/DATA_BITS/STOP_BIT)",
+      "confidence_score": 0.86,
+      "description": "Default recovery in the combinational state transition logic. This path is intended to recover from invalid states \u2014 an uncommon event during correct operation, thus a rare region.",
+      "line_in_chunk": 75,
+      "absolute_line": 75,
+      "matched_line_content": "default: next_state = IDLE;",
+      "match_type": "first_line_exact",
+      "line_range": "75-77"
+    },
+    {
+      "chunk_id": "chunk_001",
+      "rare_region_type": "FORMAL_ONLY_ASSERTIONS",
+      "rare_region_code": "`ifdef FORMAL\n\n        assert property (@(posedge clk) disable iff (!rst_n)\n            (state == IDLE || state == STOP_BIT) |-> tx_out == 1'b1\n        );\n        \n        assert property (@(posedge clk) disable iff (!rst_n)\n            (state != IDLE) |-> tx_ready == 1'b0\n        );\n    `endif",
+      "activation_trigger": "`FORMAL` define enabled (formal verification build); assertions exercised during formal checks, not in normal synthesis or runtime",
+      "confidence_score": 0.99,
+      "description": "Assertions wrapped in `ifdef FORMAL` are only active during formal verification runs. They represent verification-only checks and are not executed in typical hardware operation \u2014 a distinctly rare/conditional execution domain.",
+      "line_in_chunk": 121,
+      "absolute_line": 121,
+      "matched_line_content": "`ifdef FORMAL",
+      "match_type": "first_line_exact",
+      "line_range": "121-130"
+    },
+    {
+      "chunk_id": "chunk_003",
+      "rare_region_type": "RESET_AND_TEST_STIMULUS",
+      "rare_region_code": "    initial begin\n        rst_n = 0;\n        tx_valid = 0;\n        tx_data = 8'h00;\n        \n        #20 rst_n = 1;\n        #50;\n        \n        @(posedge clk);\n        tx_data = 8'h55;\n        tx_valid = 1;\n        @(posedge clk);\n        tx_valid = 0;\n        \n        wait(tx_ready);\n        #1000;\n        \n        @(posedge clk);\n        tx_data = 8'hAA;\n        tx_valid = 1;\n        @(posedge clk);\n        tx_valid = 0;\n        \n        wait(tx_ready);\n        #1000;\n        \n        $finish;\n    end",
+      "activation_trigger": "Simulation reset assertion/deassertion and explicit test stimulus sequence (initial block executed at simulation start)",
+      "confidence_score": 0.97,
+      "description": "This initial block performs reset (rst_n asserted then deasserted), drives two transmit transactions, waits for tx_ready, and calls $finish. Reset and end-of-simulation behavior are initialization/termination events and the specific wait-for-ready paths are only exercised during the test \u2014 making this a rare/one-shot execution region in the context of continuous hardware operation.",
+      "line_in_chunk": 14,
+      "absolute_line": 157,
+      "matched_line_content": "initial begin",
+      "match_type": "first_line_exact",
+      "line_range": "14-41"
+    },
+    {
+      "chunk_id": "chunk_003",
+      "rare_region_type": "WAIT_FOR_READY_SUSPENSION",
+      "rare_region_code": "        wait(tx_ready);",
+      "activation_trigger": "Waiting for DUT to assert tx_ready before continuing (synchronization point in test stimulus)",
+      "confidence_score": 0.9,
+      "description": "The `wait(tx_ready);` statements (used twice in the stimulus block) cause the testbench to pause until the DUT signals readiness. In hardware these synchronization points represent rare/uncommon timing conditions (especially if the DUT stalls or deadlocks), and are only executed during the specific test sequence.",
+      "line_in_chunk": 33,
+      "absolute_line": 176,
+      "matched_line_content": "wait(tx_ready);",
+      "match_type": "first_line_exact",
+      "line_range": "33"
+    },
+    {
+      "chunk_id": "chunk_003",
+      "rare_region_type": "DEBUG_MONITOR",
+      "rare_region_code": "    initial begin\n        $monitor(\"Time=%0t rst_n=%b tx_data=%h tx_valid=%b tx_ready=%b tx_out=%b\", \n                 $time, rst_n, tx_data, tx_valid, tx_ready, tx_out);\n    end",
+      "activation_trigger": "Simulation start (initial block enabling runtime monitoring/logging)",
+      "confidence_score": 0.92,
+      "description": "$monitor is a simulation-only observation/debug facility. It runs only under simulation and is not synthesizable \u2014 making it a rare/diagnostic execution region compared with normal synthesized logic.",
+      "line_in_chunk": 14,
+      "absolute_line": 157,
+      "matched_line_content": "initial begin",
+      "match_type": "first_line_exact",
+      "line_range": "14-17"
+    }
+  ]
+}

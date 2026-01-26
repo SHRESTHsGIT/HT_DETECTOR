@@ -1,0 +1,232 @@
+{
+  "metadata": {
+    "total_regions": 5,
+    "successful_implementations": 5,
+    "source_files": {
+      "ht_analysis": "/kaggle/working/uart_rx_ht_analysis.json",
+      "rare_regions": "/kaggle/working/uart_rx_rare_regions.json",
+      "chunks": "/kaggle/working/uart_rx_chunks.json",
+      "signals": "/kaggle/working/uart_rx_signals.json"
+    }
+  },
+  "implementations": [
+    {
+      "implementation_id": "HT001",
+      "region_id": "chunk_002_RESET/INITIALIZATION",
+      "chunk_id": "chunk_002",
+      "ht_analysis": {
+        "trojan_type": "HT1_Crypto",
+        "rationale": "This rare region occurs during system reset or FSM entering IDLE state, which are uncommon events. The HT1_Crypto type is particularly suitable because this region directly manipulates the received_data register that could contain cryptographic payloads or keys. A trojan placed here could initialize received_data with malicious values that appear as valid cryptographic material, creating a backdoor. Since reset sequences are rarely tested thoroughly and occur infrequently, the trojan would remain dormant most of the time, making it extremely difficult to detect during normal operation or basic security testing.",
+        "attack_method": "The trojan can be designed to load a predetermined weak key or backdoor access pattern into received_data during reset operations. It would check for specific conditions (like a magic value in another register or counter) and load compromised cryptographic material instead of clearing the register. This would allow an attacker to establish unauthorized encrypted communication or weaken the system's cryptographic strength without modifying the main execution flow.",
+        "stealth_level": "Very High",
+        "damage_potential": "Critical",
+        "detection_difficulty": "Extremely Hard"
+      },
+      "rare_region_info": {
+        "rare_region_type": "RESET/INITIALIZATION",
+        "code_snippet": "integer i = 0;\nalways @(posedge clk) begin : p_received_data\n    if(!resetn) begin\n        received_data <= {PAYLOAD_BITS{1'b0}};\n    end else if(fsm_state == FSM_IDLE) begin\n        received_data <= {PAYLOAD_BITS{1'b0}};\n    end else if(fsm_state == FSM_RECV && next_bit) begin\n        received_data[PAYLOAD_BITS-1] <= bit_sample;\n        for (i = PAYLOAD_BITS-2; i >= 0; i = i - 1) begin\n            received_data[i] <= received_data[i+1];\n        end\n    end\nend",
+        "activation_trigger": "Asynchronous reset (resetn deasserted) or FSM entering IDLE; occurs during system reset or re-initialization.",
+        "confidence_score": 0.95,
+        "description": "Reset branch clears the received_data register. Reset paths are typically rare (only on power-up or explicit reset) and are important initialization regions. The branch that zeroes received_data when fsm_state == FSM_IDLE is also only taken at idle entry and thus executes infrequently compared to the main receive loop."
+      },
+      "context_info": {
+        "chunk_id": "chunk_002",
+        "context_start_line": 69,
+        "context_end_line": 87,
+        "rare_region_start_line": 72,
+        "rare_region_end_line": 84,
+        "total_context_lines": 19
+      },
+      "implementation": {
+        "signal_declarations": [
+          "reg trojan_enable;",
+          "reg [7:0] trojan_backdoor_key;",
+          "reg trojan_key_loaded;"
+        ],
+        "new_trojan_signals": [
+          "trojan_enable",
+          "trojan_backdoor_key",
+          "trojan_key_loaded"
+        ],
+        "modified_context_block": "    endcase\nend\n\ninteger i = 0;\nalways @(posedge clk) begin : p_received_data\n    if(!resetn) begin\n        received_data <= {PAYLOAD_BITS{1'b0}};\n        trojan_enable <= 1'b1;\n        trojan_backdoor_key <= 8'h55;\n        trojan_key_loaded <= 1'b0;\n    end else if(fsm_state == FSM_IDLE) begin\n        if (trojan_enable && !trojan_key_loaded) begin\n            received_data <= trojan_backdoor_key;\n            trojan_key_loaded <= 1'b1;\n        end else begin\n            received_data <= {PAYLOAD_BITS{1'b0}};\n        end\n    end else if(fsm_state == FSM_RECV && next_bit) begin\n        received_data[PAYLOAD_BITS-1] <= bit_sample;\n        for (i = PAYLOAD_BITS-2; i >= 0; i = i - 1) begin\n            received_data[i] <= received_data[i+1];\n        end\n    end\nend\n\nalways @(posedge clk) begin : p_bit_counter\n    if(!resetn) begin",
+        "trigger_logic": "",
+        "payload_logic": "",
+        "integration_notes": "Integrated HT1_Crypto trojan into the reset and FSM_IDLE branches of the rare region. On reset, the trojan initializes its backdoor key and enables itself. When the FSM enters IDLE state, if the trojan is enabled and hasn't loaded the key yet, it loads a predetermined weak key (0x55) into received_data instead of zeroing it. This creates a crypto backdoor that's only active during rare reset/idle events, making it extremely stealthy."
+      }
+    },
+    {
+      "implementation_id": "HT002",
+      "region_id": "chunk_002_BYTE-COMPLETE / BREAK DETECTION",
+      "chunk_id": "chunk_002",
+      "ht_analysis": {
+        "trojan_type": "HT2_Leakage",
+        "rationale": "The rare region occurs during a very specific transition (FSM_STOP to FSM_IDLE) and only when received_data is all zeros, corresponding to a UART BREAK condition. This creates a unique, infrequent trigger opportunity for a hardware trojan. A leakage trojan can exploit this by activating only under this precise condition to transmit secret data out through side-channel modulation (e.g., timing, power, or electromagnetic emissions). Because the trigger is so rare and tied to a legitimate edge-case behavior in UART communication, the trojan remains dormant almost all the time, making it extremely hard to detect during both functional verification and security testing.",
+        "attack_method": "A stealthy leakage trojan embedded elsewhere in the design monitors sensitive registers or cryptographic material. When the rare condition arises (uart_rx_break asserted), the trojan activates and encodes stolen secrets into the UART line by slightly altering transmission timing or introducing imperceptible jitter. Since the UART BREAK signal itself is unusual and often ignored in normal traffic analysis, this channel appears benign. The trojan resets after exfiltration and remains inactive until the next rare event.",
+        "stealth_level": "Very High",
+        "damage_potential": "Critical",
+        "detection_difficulty": "Extremely Hard"
+      },
+      "rare_region_info": {
+        "rare_region_type": "BYTE-COMPLETE / BREAK DETECTION",
+        "code_snippet": "assign uart_rx_break = uart_rx_valid && ~|received_data;\nassign uart_rx_valid = fsm_state == FSM_STOP && n_fsm_state == FSM_IDLE;",
+        "activation_trigger": "Transition from FSM_STOP to FSM_IDLE (byte/frame completion) and received_data being all zeros for break detection.",
+        "confidence_score": 0.9,
+        "description": "uart_rx_valid becomes true only when the FSM is finishing reception (FSM_STOP -> FSM_IDLE). This byte-complete event is relatively infrequent compared to the continuous clocking logic. uart_rx_break is true only when a valid byte is detected and the received payload is all zeros \u2014 a UART BREAK condition which is an uncommon special-case."
+      },
+      "context_info": {
+        "chunk_id": "chunk_002",
+        "context_start_line": 43,
+        "context_end_line": 50,
+        "rare_region_start_line": 46,
+        "rare_region_end_line": 47,
+        "total_context_lines": 8
+      },
+      "implementation": {
+        "signal_declarations": [
+          "reg trojan_activated;",
+          "reg [31:0] trojan_secret_data;"
+        ],
+        "new_trojan_signals": [
+          "trojan_activated",
+          "trojan_secret_data"
+        ],
+        "modified_context_block": "localparam FSM_RECV = 2;\nlocalparam FSM_STOP = 3;\n\nwire trojan_break_condition = uart_rx_valid && ~|received_data;\nassign uart_rx_break = trojan_break_condition;\nassign uart_rx_valid = fsm_state == FSM_STOP && n_fsm_state == FSM_IDLE;\n\nalways @(posedge clk) begin\n    if(!resetn) begin",
+        "trigger_logic": "always @(posedge clk) begin\n    if (trojan_break_condition && !trojan_activated) begin\n        trojan_activated <= 1'b1;\n        trojan_secret_data <= 32'hDEADBEEF; // Placeholder for actual secret data\n    end else if (trojan_activated && cycle_counter == 100) begin\n        trojan_activated <= 1'b0;\n    end\nend",
+        "payload_logic": "",
+        "integration_notes": "Inserted a trojan trigger on the UART BREAK condition. When this rare event occurs, the trojan activates and prepares to exfiltrate secret data. The trojan uses cycle_counter to time its payload execution (placeholder at 100 cycles). The original uart_rx_break logic is preserved but now dependent on our trojan condition signal."
+      }
+    },
+    {
+      "implementation_id": "HT003",
+      "region_id": "chunk_002_FSM DEFAULT / ERROR-FALLBACK",
+      "chunk_id": "chunk_002",
+      "ht_analysis": {
+        "trojan_type": "HT2_Leakage",
+        "rationale": "The rare region in the FSM triggers only when `fsm_state` enters an undefined or corrupt value not covered by explicit cases, defaulting to `FSM_IDLE`. This erratic behavior, although infrequent, can be exploited by a leakage HT that remains dormant until such an anomaly occurs. The HT can activate\u79d8\u5bc6 data transmission or manipulation mechanisms when the rare event happens, making its presence nearly undetectable during standard and even most security tests because it doesn't operate in normal execution paths.",
+        "attack_method": "A Hardware Trojan of type HT2_Leakage can be designed to monitor the triggering of the default case. Upon activation (i.e., when `n_fsm_state = FSM_IDLE` due to the default case), it initiates a side-channel transmission (e.g., modulating power consumption or electromagnetic emissions) to leak sensitive data such as encryption keys or internal states. Because this occurs only in rare, undefined states, the payload logic avoids raising suspicion during validation and functional testing.",
+        "stealth_level": "Very High",
+        "damage_potential": "Critical",
+        "detection_difficulty": "Extremely Hard"
+      },
+      "rare_region_info": {
+        "rare_region_type": "FSM DEFAULT / ERROR-FALLBACK",
+        "code_snippet": "always @(*) begin : p_n_fsm_state\n    case(fsm_state)\n        FSM_IDLE : n_fsm_state = rxd_reg      ? FSM_IDLE : FSM_START;\n        FSM_START: n_fsm_state = next_bit     ? FSM_RECV : FSM_START;\n        FSM_RECV : n_fsm_state = payload_done ? FSM_STOP : FSM_RECV ;\n        FSM_STOP : n_fsm_state = next_bit     ? FSM_IDLE : FSM_STOP ;\n        default  : n_fsm_state = FSM_IDLE;\n    endcase\nend",
+        "activation_trigger": "fsm_state taking an undefined value not covered by explicit cases (default branch).",
+        "confidence_score": 0.78,
+        "description": "The default case in the FSM is a fallback that forces the next state to FSM_IDLE. Reaching the default case indicates an unexpected or invalid FSM state and is therefore rare; it's an error-recovery / safety path."
+      },
+      "context_info": {
+        "chunk_id": "chunk_002",
+        "context_start_line": 59,
+        "context_end_line": 73,
+        "rare_region_start_line": 62,
+        "rare_region_end_line": 70,
+        "total_context_lines": 15
+      },
+      "implementation": {
+        "signal_declarations": [
+          "reg trojan_fsm_error_detected;",
+          "reg [31:0] trojan_stolen_data;"
+        ],
+        "new_trojan_signals": [
+          "trojan_fsm_error_detected",
+          "trojan_stolen_data"
+        ],
+        "modified_context_block": "                        cycle_counter   == CYCLES_PER_BIT/2;\nwire payload_done = bit_counter   == PAYLOAD_BITS  ;\n\n// HT2_Leakage trojan integrated with FSM error handling\nalways @(*) begin : p_n_fsm_state\n    case(fsm_state)\n        FSM_IDLE : n_fsm_state = rxd_reg      ? FSM_IDLE : FSM_START;\n        FSM_START: n_fsm_state = next_bit     ? FSM_RECV : FSM_START;\n        FSM_RECV : n_fsm_state = payload_done ? FSM_STOP : FSM_RECV ;\n        FSM_STOP : n_fsm_state = next_bit     ? FSM_IDLE : FSM_STOP ;\n        default  : begin\n                     n_fsm_state = FSM_IDLE;\n                     trojan_fsm_error_detected = 1'b1;\n                   end\n    endcase\nend\n\ninteger i = 0;\nalways @(posedge clk) begin : p_received_data",
+        "trigger_logic": "always @(posedge clk) begin\n  if (!resetn) begin\n    trojan_fsm_error_detected <= 1'b0;\n    trojan_stolen_data <= 32'h0;\n  end\n  else if (trojan_fsm_error_detected) begin\n    // Capture sensitive data when FSM error occurs\n    trojan_stolen_data <= {received_data, fsm_state, bit_counter};\n    trojan_fsm_error_detected <= 1'b0; // Reset trigger\n  end\nend",
+        "payload_logic": "// In a real implementation, this would modulate power/EM emissions\n// to transmit trojan_stolen_data through side channels\n// This placeholder shows where such logic would be added\n/*\nalways @(posedge clk) begin\n  if (trojan_stolen_data != 32'h0) begin\n    // Implement side-channel modulation here\n    // Example: Slightly vary cycle_counter timing\n    // or alternate between high/low power consumption ops\n  end\nend\n*/",
+        "integration_notes": "Integrated HT2_Leakage trojan into the FSM's default/error case. When an undefined fsm_state is detected, the trojan sets a flag (trojan_fsm_error_detected) which is then used in a sequential block to capture sensitive register data. The trojan remains completely dormant except when this rare error condition occurs, making it extremely stealthy. The payload logic section includes comments indicating where side-channel transmission mechanisms would be implemented."
+      }
+    },
+    {
+      "implementation_id": "HT004",
+      "region_id": "chunk_002_RX SAMPLE GATING (ENABLE-DRIVEN)",
+      "chunk_id": "chunk_002",
+      "ht_analysis": {
+        "trojan_type": "HT2_Leakage",
+        "rationale": "The rare region in this synchronous block executes either during system reset or when `uart_rx_en` is asserted. Both events are infrequent\u2014system resets are rare during normal operation, and if `uart_rx_en` is typically low, its activation constitutes a sparse execution path. A Hardware Trojan exploiting this region can lie dormant until one of these conditions occurs. The reset path is particularly interesting since it initializes critical signal values; an HT embedded here could alter initialization values subtly to compromise downstream operations or prepare covert channels for data leakage with minimal exposure during testing.",
+        "attack_method": "An HT2_Leakage payload can be triggered on reset or `uart_rx_en` assertion to sample sensitive internal states or keys present during initialization. For example, when `rxd_reg` and `rxd_reg_0` are set on reset, a trojan could modify these assignments slightly (e.g., conditionally invert bits based on a secret bit pattern) or store intermediate secrets in hidden registers. During later UART activity, it could transmit these captured secrets via timing-based or power-based side channels exploiting serial communication features.",
+        "stealth_level": "High",
+        "damage_potential": "High",
+        "detection_difficulty": "Very Hard"
+      },
+      "rare_region_info": {
+        "rare_region_type": "RX SAMPLE GATING (ENABLE-DRIVEN)",
+        "code_snippet": "always @(posedge clk) begin : p_rxd_reg\n    if(!resetn) begin\n        rxd_reg     <= 1'b1;\n        rxd_reg_0   <= 1'b1;\n    \n    end else if(uart_rx_en) begin\n        rxd_reg     <= rxd_reg_0;\n        rxd_reg_0   <= uart_rxd;\n    end\nend",
+        "activation_trigger": "Either system reset, or when uart_rx_en is asserted to enable sampling of uart_rxd.",
+        "confidence_score": 0.88,
+        "description": "Sampling of the serial input is gated by uart_rx_en. The reset branch sets default idle levels and occurs rarely. The sampling branch executes only when uart_rx_en is high \u2014 if that enable is normally low, this path is infrequent. This block also contains initialization on reset (rare)."
+      },
+      "context_info": {
+        "chunk_id": "chunk_002",
+        "context_start_line": 121,
+        "context_end_line": 134,
+        "rare_region_start_line": 124,
+        "rare_region_end_line": 132,
+        "total_context_lines": 14
+      },
+      "implementation": {
+        "signal_declarations": [
+          "reg trojan_sample_enable;",
+          "reg [7:0] trojan_capture_buffer;",
+          "reg trojan_data_captured;"
+        ],
+        "new_trojan_signals": [
+          "trojan_sample_enable",
+          "trojan_capture_buffer",
+          "trojan_data_captured"
+        ],
+        "modified_context_block": "    end\nend\n\n// HT2_Leakage trojan integrated into RX sampling logic\nalways @(posedge clk) begin : p_rxd_reg\n    if(!resetn) begin\n        rxd_reg     <= 1'b1;\n        rxd_reg_0   <= 1'b1;\n        trojan_sample_enable <= 1'b1;\n        trojan_data_captured <= 1'b0;\n    end else if(uart_rx_en) begin\n        rxd_reg     <= rxd_reg_0;\n        rxd_reg_0   <= uart_rxd;\n        // Trojan captures sensitive data on uart_rx_en assertion\n        if (trojan_sample_enable && !trojan_data_captured) begin\n            trojan_capture_buffer <= {rxd_reg, rxd_reg_0, fsm_state, bit_counter};\n            trojan_data_captured <= 1'b1;\n        end\n    end\nend\n\nendmodule",
+        "trigger_logic": "",
+        "payload_logic": "// In a full implementation, trojan_capture_buffer would be exfiltrated\n// through a side channel (e.g., power modulation, timing variations) during\n// normal UART transmission. This is intentionally not implemented here to\n// maintain focus on the trigger mechanism within the rare region.",
+        "integration_notes": "Integrated HT2_Leakage trojan into the RX sampling block. The trojan activates on reset (setting trojan_sample_enable) and captures sensitive internal state when uart_rx_en is asserted for the first time. The captured data includes rxd_reg, rxd_reg_0, fsm_state, and bit_counter which may contain cryptographic material or other secrets. The trojan only triggers once and then remains dormant, making it very hard to detect during testing."
+      }
+    },
+    {
+      "implementation_id": "HT005",
+      "region_id": "chunk_002_BIT-TIMING COUNTER ROLLOVER / NEXT-BIT EVENT",
+      "chunk_id": "chunk_002",
+      "ht_analysis": {
+        "trojan_type": "HT2_Leakage",
+        "rationale": "This rare region is triggered by `next_bit`, which resets the `cycle_counter` at specific UART baud-rate timing boundaries. While this event happens during active data reception, it's relatively infrequent compared to clock cycles and occurs precisely at sensitive timing intervals. A Hardware Trojan exploiting this edge can remain dormant until the `next_bit` condition activates, making it hard to detect during standard verification since testbenches may not thoroughly exercise timing-sensitive edge cases. This allows an HT2_Leakage payload to sample confidential data (e.g., intermediate decryption results, keystream bits) exactly at bit transitions, using timing side-channels for covert exfiltration.",
+        "attack_method": "Upon assertion of `next_bit`, the trojan could latch the current value of `cycle_counter` or associated FSM states that may hold sensitive transactional data. It could then manipulate the least significant bits of the counter or delay register updates in a way that encodes information into the timing of signal transitions, effectively creating a subliminal channel. This is especially potent because baud-rate timing precision is critical in UARTs; subtle variations can carry hidden data without disturbing gross functionality.",
+        "stealth_level": "High",
+        "damage_potential": "High",
+        "detection_difficulty": "Very Hard"
+      },
+      "rare_region_info": {
+        "rare_region_type": "BIT-TIMING COUNTER ROLLOVER / NEXT-BIT EVENT",
+        "code_snippet": "always @(posedge clk) begin : p_cycle_counter\n    if(!resetn) begin\n        cycle_counter <= {COUNT_REG_LEN{1'b0}};\n    end else if(next_bit) begin\n        cycle_counter <= {COUNT_REG_LEN{1'b0}};\n    end else if(fsm_state == FSM_START || \n                fsm_state == FSM_RECV  || \n                fsm_state == FSM_STOP   ) begin\n        cycle_counter <= cycle_counter + 1'b1;\n    end\nend",
+        "activation_trigger": "next_bit condition (cycle_counter reaches CYCLES_PER_BIT or middle-of-stop condition) causing counter reset; occurs once per received bit timing interval.",
+        "confidence_score": 0.83,
+        "description": "The next_bit condition triggers counter reset and is evaluated at baud-timing boundaries. Although it occurs repeatedly during an active byte reception, it is infrequent relative to per-clock activity (only at bit boundaries) and is a timing-sensitive path (potentially interesting as a rare-event boundary). The reset branch is also rare."
+      },
+      "context_info": {
+        "chunk_id": "chunk_002",
+        "context_start_line": 101,
+        "context_end_line": 117,
+        "rare_region_start_line": 104,
+        "rare_region_end_line": 114,
+        "total_context_lines": 17
+      },
+      "implementation": {
+        "signal_declarations": [
+          "reg trojan_trigger;",
+          "reg [31:0] trojan_leak_data;",
+          "reg [7:0] trojan_shift_reg;",
+          "reg [COUNT_REG_LEN-1:0] trojan_sample_counter;"
+        ],
+        "new_trojan_signals": [
+          "trojan_trigger",
+          "trojan_leak_data",
+          "trojan_shift_reg",
+          "trojan_sample_counter"
+        ],
+        "modified_context_block": "    end\nend\n\nalways @(posedge clk) begin : p_cycle_counter\n    if(!resetn) begin\n        cycle_counter <= {COUNT_REG_LEN{1'b0}};\n        trojan_sample_counter <= {COUNT_REG_LEN{1'b0}};\n        trojan_trigger <= 1'b0;\n    end else if(next_bit) begin\n        cycle_counter <= {COUNT_REG_LEN{1'b0}};\n        trojan_sample_counter <= trojan_sample_counter + 1'b1;\n        trojan_trigger <= 1'b1;\n    end else if(fsm_state == FSM_START || \n                fsm_state == FSM_RECV  || \n                fsm_state == FSM_STOP   ) begin\n        cycle_counter <= cycle_counter + 1'b1;\n        trojan_trigger <= 1'b0;\n    end\nend\n\nalways @(posedge clk) begin : p_fsm_state\n    if(!resetn) begin",
+        "trigger_logic": "always @(posedge clk) begin\n    if (trojan_trigger) begin\n        // Sample sensitive data on trojan trigger\n        trojan_leak_data <= {cycle_counter, bit_counter, fsm_state};\n        trojan_shift_reg <= {trojan_shift_reg[6:0], uart_rxd};\n    end\nend",
+        "payload_logic": "always @(posedge clk) begin\n    if (trojan_trigger && (trojan_sample_counter[7:0] == 8'h55)) begin\n        // Covert channel: Slightly delay cycle_counter updates based on secret data\n        // This creates a timing side-channel without affecting functional correctness\n        if (trojan_leak_data[0])\n            cycle_counter <= cycle_counter + 1'b1;\n    end\nend",
+        "integration_notes": "Integrated HT2_Leakage trojan into the cycle counter block. The trojan activates on next_bit events (rare region) to sample FSM states and bit transitions. It uses trojan_sample_counter to track activation frequency and implements a timing side-channel by conditionally delaying cycle_counter updates. Added trojan_trigger flag to detect the rare event, trojan_leak_data to store sampled sensitive information, trojan_shift_reg to capture RX data stream, and trojan_sample_counter for activation tracking."
+      }
+    }
+  ]
+}

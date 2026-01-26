@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "total_modules": 1,
+    "modules_processed": 1
+  },
+  "declaration_points": {
+    "chunk_002": {
+      "module_id": "chunk_002",
+      "insertion_line_in_chunk": 36,
+      "absolute_line_number": 45,
+      "confidence": "high",
+      "before_statement": "assign uart_rx_break = uart_rx_valid && ~|received_data;",
+      "after_statement": "localparam FSM_STOP = 3;",
+      "reasoning": "The last parameter/localparam appears at chunk line 35 (FSM_STOP). All reg/wire declarations are already present (up to n_fsm_state at line 31). The first executable statement (an assign) is at chunk line 37. Inserting at chunk line 36 places the trojan signal declarations after all parameters/localparams and after existing signal declarations, but before any assigns/always blocks, satisfying the insertion requirements.",
+      "verification": "Scanned the provided chunk for `ifdef/`ifndef, generate blocks, typedefs/enums and mixed declaration blocks \u2014 none are present. The chosen insertion point (chunk line 36) is a blank line between localparams and the first assign, making it a safe insertion point."
+    }
+  }
+}

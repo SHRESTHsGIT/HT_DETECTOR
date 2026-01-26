@@ -1,0 +1,13 @@
+batch_size: 4
+dropout: 0.5
+embed_dim: 2
+epochs: 200
+hidden: 200
+learning_rate: 0.001
+num_layer: 2
+pooling_type: sagpool
+poolratio: 0.8
+ratio: 0.8
+readout_type: max
+seed: 42
+test_step: 10

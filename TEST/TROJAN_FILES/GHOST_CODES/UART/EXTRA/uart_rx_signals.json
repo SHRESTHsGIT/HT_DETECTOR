@@ -1,0 +1,198 @@
+{
+  "metadata": {
+    "source_chunks_file": "/kaggle/working/uart_rx_chunks.json",
+    "total_modules": 2,
+    "modules_extracted": 1
+  },
+  "module_signals": {
+    "chunk_002": {
+      "module_id": "chunk_002",
+      "module_name": "uart_rx",
+      "chunks": [
+        "chunk_002"
+      ],
+      "ports": [
+        {
+          "name": "clk",
+          "direction": "input",
+          "type": "wire",
+          "width": "",
+          "declared_at_line": 2
+        },
+        {
+          "name": "resetn",
+          "direction": "input",
+          "type": "wire",
+          "width": "",
+          "declared_at_line": 3
+        },
+        {
+          "name": "uart_rxd",
+          "direction": "input",
+          "type": "wire",
+          "width": "",
+          "declared_at_line": 4
+        },
+        {
+          "name": "uart_rx_en",
+          "direction": "input",
+          "type": "wire",
+          "width": "",
+          "declared_at_line": 5
+        },
+        {
+          "name": "uart_rx_break",
+          "direction": "output",
+          "type": "wire",
+          "width": "",
+          "declared_at_line": 6
+        },
+        {
+          "name": "uart_rx_valid",
+          "direction": "output",
+          "type": "wire",
+          "width": "",
+          "declared_at_line": 7
+        },
+        {
+          "name": "uart_rx_data",
+          "direction": "output",
+          "type": "reg",
+          "width": "[PAYLOAD_BITS-1:0]",
+          "declared_at_line": 8
+        }
+      ],
+      "module_signals": [
+        {
+          "name": "rxd_reg",
+          "type": "reg",
+          "width": "",
+          "declared_at_line": 18,
+          "scope": "module"
+        },
+        {
+          "name": "rxd_reg_0",
+          "type": "reg",
+          "width": "",
+          "declared_at_line": 19,
+          "scope": "module"
+        },
+        {
+          "name": "received_data",
+          "type": "reg",
+          "width": "[PAYLOAD_BITS-1:0]",
+          "declared_at_line": 21,
+          "scope": "module"
+        },
+        {
+          "name": "cycle_counter",
+          "type": "reg",
+          "width": "[COUNT_REG_LEN-1:0]",
+          "declared_at_line": 23,
+          "scope": "module"
+        },
+        {
+          "name": "bit_counter",
+          "type": "reg",
+          "width": "[3:0]",
+          "declared_at_line": 25,
+          "scope": "module"
+        },
+        {
+          "name": "bit_sample",
+          "type": "reg",
+          "width": "",
+          "declared_at_line": 27,
+          "scope": "module"
+        },
+        {
+          "name": "fsm_state",
+          "type": "reg",
+          "width": "[2:0]",
+          "declared_at_line": 29,
+          "scope": "module"
+        },
+        {
+          "name": "n_fsm_state",
+          "type": "reg",
+          "width": "[2:0]",
+          "declared_at_line": 30,
+          "scope": "module"
+        },
+        {
+          "name": "next_bit",
+          "type": "wire",
+          "width": "",
+          "declared_at_line": 48,
+          "scope": "module"
+        },
+        {
+          "name": "payload_done",
+          "type": "wire",
+          "width": "",
+          "declared_at_line": 51,
+          "scope": "module"
+        },
+        {
+          "name": "i",
+          "type": "integer",
+          "width": "",
+          "declared_at_line": 63,
+          "scope": "module"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "CYCLES_PER_BIT",
+          "type": "localparam",
+          "value": "5000",
+          "declared_at_line": 11
+        },
+        {
+          "name": "PAYLOAD_BITS",
+          "type": "localparam",
+          "value": "8",
+          "declared_at_line": 13
+        },
+        {
+          "name": "STOP_BITS",
+          "type": "localparam",
+          "value": "1",
+          "declared_at_line": 14
+        },
+        {
+          "name": "COUNT_REG_LEN",
+          "type": "localparam",
+          "value": "14",
+          "declared_at_line": 16
+        },
+        {
+          "name": "FSM_IDLE",
+          "type": "localparam",
+          "value": "0",
+          "declared_at_line": 32
+        },
+        {
+          "name": "FSM_START",
+          "type": "localparam",
+          "value": "1",
+          "declared_at_line": 33
+        },
+        {
+          "name": "FSM_RECV",
+          "type": "localparam",
+          "value": "2",
+          "declared_at_line": 34
+        },
+        {
+          "name": "FSM_STOP",
+          "type": "localparam",
+          "value": "3",
+          "declared_at_line": 35
+        }
+      ],
+      "enums": [],
+      "state_signals": []
+    }
+  }
+}

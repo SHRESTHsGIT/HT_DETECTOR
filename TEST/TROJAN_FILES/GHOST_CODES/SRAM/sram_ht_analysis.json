@@ -1,0 +1,89 @@
+{
+  "trojan_analysis": {
+    "metadata": {
+      "source_file": "sram.v",
+      "analysis_mode": "rare_regions",
+      "total_rare_regions": 2,
+      "regions_analyzed": 2,
+      "exploitable_regions": 2,
+      "analysis_timestamp": "2025-10-08T13:04:04.395534",
+      "research_purpose": "Hardware security vulnerability analysis and trojan susceptibility study"
+    },
+    "region_analysis": [
+      {
+        "region_id": "chunk_002_CONDITIONAL_DEBUG_OUTPUT",
+        "chunk_id": "chunk_002",
+        "original_rare_region": {
+          "rare_region_type": "CONDITIONAL_DEBUG_OUTPUT",
+          "code_snippet": "if (!csb0_reg && web0_reg)\n  $display($time, \" Reading %m addr0=%b dout0=%b\", addr0_reg, mem[addr0_reg]);",
+          "activation_trigger": "Read operation when chip is enabled and write is disabled",
+          "confidence_score": 0.8,
+          "description": "Displays memory read activity; typically occurs less frequently than regular writes depending on system usage patterns"
+        },
+        "code_context": [
+          "",
+          "  always @(posedge clk0) begin",
+          "    csb0_reg  <= csb0;",
+          "    web0_reg  <= web0;",
+          "    addr0_reg <= addr0;",
+          "    din0_reg  <= din0;",
+          "    if (!csb0_reg && web0_reg)",
+          "      $display($time, \" Reading %m addr0=%b dout0=%b\", addr0_reg, mem[addr0_reg]);  // <-- RARE REGION",
+          "    if (!csb0_reg && !web0_reg)",
+          "      $display($time, \" Writing %m addr0=%b din0=%b\", addr0_reg, din0_reg);",
+          "  end",
+          "",
+          "  always @(negedge clk0) begin : MEM_WRITE0",
+          "    if (!csb0_reg && !web0_reg)",
+          "      mem[addr0_reg] <= din0_reg;"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT2_Leakage",
+          "rationale": "The rare region occurs during read operations when the chip is enabled and write is disabled. This is an ideal location for a leakage trojan as it already has access to sensitive data (the memory contents being read). The infrequent execution of this path makes it easier for a trojan to remain undetected during normal testing, as security analysis often focuses on more common execution paths. The trojan can exfiltrate data through covert channels when the specific read condition is met, making it particularly dangerous in deployed systems where these rare reads might access highly sensitive information.",
+          "attack_method": "The trojan can be implemented by adding logic to capture the memory content (mem[addr0_reg]) during the rare read operation and storing it in a hidden buffer. This data can then be exfiltrated through a side channel such as power consumption variations, electromagnetic emissions, or by modulating an unused pin. The trojan would only activate when specific addresses or data patterns are read, making it even harder to detect. For example, it could trigger only when reading from certain memory locations that are known to contain cryptographic keys or other sensitive data.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_002_CONDITIONAL_DEBUG_OUTPUT",
+        "chunk_id": "chunk_002",
+        "original_rare_region": {
+          "rare_region_type": "CONDITIONAL_DEBUG_OUTPUT",
+          "code_snippet": "if (!csb0_reg && !web0_reg)\n  $display($time, \" Writing %m addr0=%b din0=%b\", addr0_reg, din0_reg);",
+          "activation_trigger": "Write operation when chip is enabled and write is active",
+          "confidence_score": 0.8,
+          "description": "Displays memory write activity; may be infrequent if memory writes are rare compared to reads"
+        },
+        "code_context": [
+          "    csb0_reg  <= csb0;",
+          "    web0_reg  <= web0;",
+          "    addr0_reg <= addr0;",
+          "    din0_reg  <= din0;",
+          "    if (!csb0_reg && web0_reg)",
+          "      $display($time, \" Reading %m addr0=%b dout0=%b\", addr0_reg, mem[addr0_reg]);",
+          "    if (!csb0_reg && !web0_reg)",
+          "      $display($time, \" Writing %m addr0=%b din0=%b\", addr0_reg, din0_reg);  // <-- RARE REGION",
+          "  end",
+          "",
+          "  always @(negedge clk0) begin : MEM_WRITE0",
+          "    if (!csb0_reg && !web0_reg)",
+          "      mem[addr0_reg] <= din0_reg;",
+          "  end",
+          ""
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Crypto",
+          "rationale": "The rare region occurs during write operations when the chip is enabled and write is active, which directly corresponds to the memory write functionality. This makes it an excellent target for a cryptographic trojan that could manipulate or corrupt sensitive data being written to memory. Since the write operation happens less frequently, a trojan placed here would be executed infrequently, making it harder to detect during normal testing. Additionally, if this memory stores cryptographic keys or other sensitive data, manipulating these writes could have severe consequences. The trojan could modify specific data patterns being written to implement a crypto backdoor or weaken encryption keys without being easily noticed.",
+          "attack_method": "The trojan can be implemented to intercept and modify data being written to specific memory addresses known to store cryptographic keys or sensitive parameters. The payload logic would check for specific address patterns or data values during the write operation and subtly alter the incoming data (din0_reg) before it's stored. For example, it could bitwise manipulate key material by flipping specific bits or XORing with a hidden constant when writing to key storage locations. Alternatively, it could redirect writes to different memory locations to corrupt critical data structures. The trojan would only activate when writing to predefined sensitive addresses, making it extremely difficult to detect during normal functional testing.",
+          "stealth_level": "High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Very Hard"
+        },
+        "no_suitable_ht": false
+      }
+    ]
+  }
+}

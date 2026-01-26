@@ -1,0 +1,60 @@
+{
+  "file_metadata": {
+    "filename": "aes_128.v",
+    "filepath": "/kaggle/working/aes_128.v",
+    "total_lines": 98,
+    "language": "Verilog",
+    "file_size_bytes": 2719,
+    "created_at": "2025-10-08T09:15:11.505090"
+  },
+  "chunks": {
+    "chunk_001": {
+      "chunk_id": "chunk_001",
+      "start_line": 1,
+      "end_line": 20,
+      "content": "\n`include \"round.v\"\n`include \"table.v\"\n",
+      "parent_module": null,
+      "parent_construct": "misc_1",
+      "is_sub_chunk": false,
+      "parent_chunk": null,
+      "line_count": 2,
+      "construct_type": "miscellaneous"
+    },
+    "chunk_002": {
+      "chunk_id": "chunk_002",
+      "start_line": 21,
+      "end_line": 61,
+      "content": "module aes_128(clk, state, key, out);\n    input          clk;\n    input  [127:0] state, key;\n    output [127:0] out;\n    reg    [127:0] s0, k0;\n    wire   [127:0] s1, s2, s3, s4, s5, s6, s7, s8, s9,\n                   k1, k2, k3, k4, k5, k6, k7, k8, k9,\n                   k0b, k1b, k2b, k3b, k4b, k5b, k6b, k7b, k8b, k9b;\n\n    always @ (posedge clk)\n      begin\n        s0 <= state ^ key;\n        k0 <= key;\n      end\n\n    expand_key_128\n        a1 (clk, k0, k1, k0b, 8'h1),\n        a2 (clk, k1, k2, k1b, 8'h2),\n        a3 (clk, k2, k3, k2b, 8'h4),\n        a4 (clk, k3, k4, k3b, 8'h8),\n        a5 (clk, k4, k5, k4b, 8'h10),\n        a6 (clk, k5, k6, k5b, 8'h20),\n        a7 (clk, k6, k7, k6b, 8'h40),\n        a8 (clk, k7, k8, k7b, 8'h80),\n        a9 (clk, k8, k9, k8b, 8'h1b),\n       a10 (clk, k9,   , k9b, 8'h36);\n\n    one_round\n        r1 (clk, s0, k0b, s1),\n        r2 (clk, s1, k1b, s2),\n        r3 (clk, s2, k2b, s3),\n        r4 (clk, s3, k3b, s4),\n        r5 (clk, s4, k4b, s5),\n        r6 (clk, s5, k5b, s6),\n        r7 (clk, s6, k6b, s7),\n        r8 (clk, s7, k7b, s8),\n        r9 (clk, s8, k8b, s9);\n\n    final_round\n        rf (clk, s9, k9b, out);\nendmodule",
+      "parent_module": null,
+      "parent_construct": "aes_128",
+      "is_sub_chunk": false,
+      "parent_chunk": null,
+      "line_count": 37,
+      "construct_type": "module"
+    },
+    "chunk_003": {
+      "chunk_id": "chunk_003",
+      "start_line": 63,
+      "end_line": 96,
+      "content": "module expand_key_128(clk, in, out_1, out_2, rcon);\n    input              clk;\n    input      [127:0] in;\n    input      [7:0]   rcon;\n    output reg [127:0] out_1;\n    output     [127:0] out_2;\n    wire       [31:0]  k0, k1, k2, k3,\n                       v0, v1, v2, v3;\n    reg        [31:0]  k0a, k1a, k2a, k3a;\n    wire       [31:0]  k0b, k1b, k2b, k3b, k4a;\n\n    assign {k0, k1, k2, k3} = in;\n    \n    assign v0 = {k0[31:24] ^ rcon, k0[23:0]};\n    assign v1 = v0 ^ k1;\n    assign v2 = v1 ^ k2;\n    assign v3 = v2 ^ k3;\n\n    always @ (posedge clk)\n        {k0a, k1a, k2a, k3a} <= {v0, v1, v2, v3};\n\n    S4\n        S4_0 (clk, {k3[23:0], k3[31:24]}, k4a);\n\n    assign k0b = k0a ^ k4a;\n    assign k1b = k1a ^ k4a;\n    assign k2b = k2a ^ k4a;\n    assign k3b = k3a ^ k4a;\n\n    always @ (posedge clk)\n        out_1 <= {k0b, k1b, k2b, k3b};\n\n    assign out_2 = {k0b, k1b, k2b, k3b};\nendmodule",
+      "parent_module": null,
+      "parent_construct": "expand_key_128",
+      "is_sub_chunk": false,
+      "parent_chunk": null,
+      "line_count": 27,
+      "construct_type": "module"
+    }
+  },
+  "chunk_sequence": [
+    "chunk_001",
+    "chunk_002",
+    "chunk_003"
+  ],
+  "chunking_stats": {
+    "total_chunks": 3,
+    "sub_chunks": 0,
+    "average_chunk_size": 22.0,
+    "constructs_preserved": 2,
+    "comments_removed": true
+  }
+}

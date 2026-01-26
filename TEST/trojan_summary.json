@@ -1,0 +1,59 @@
+{
+  "metadata": {
+    "total_implementations": 3,
+    "source_file": "RISCV.sv",
+    "output_directory": "/kaggle/working/final_trojan_files"
+  },
+  "files_generated": {
+    "original": "RISCV_ORIGINAL.sv",
+    "individual_modules": [
+      "individual_trojan_modules/HT001_chunk_001_RESET_SEQUENCE_HT2_Leakage.sv",
+      "individual_trojan_modules/HT002_chunk_001_RESET_SEQUENCE_HT1_Privilege.sv",
+      "individual_trojan_modules/HT003_chunk_001_RARE_DEFAULT_RECOVERY_HT2_Leakage.sv"
+    ],
+    "complete_single_trojan": [
+      "complete_files_single_trojan/RISCV_with_HT001.sv",
+      "complete_files_single_trojan/RISCV_with_HT002.sv",
+      "complete_files_single_trojan/RISCV_with_HT003.sv"
+    ],
+    "all_trojans_combined": "all_trojans_combined/RISCV_ALL_TROJANS.sv"
+  },
+  "trojan_details": [
+    {
+      "id": "HT001",
+      "region": "chunk_001_RESET_SEQUENCE",
+      "chunk": "chunk_001",
+      "type": "HT2_Leakage",
+      "stealth": "Very High",
+      "damage": "High",
+      "detection_difficulty": "Extremely Hard",
+      "context_lines": "26-45",
+      "individual_module_file": "individual_trojan_modules/HT001_chunk_001_RESET_SEQUENCE_HT2_Leakage.sv",
+      "complete_file": "complete_files_single_trojan/RISCV_with_HT001.sv"
+    },
+    {
+      "id": "HT002",
+      "region": "chunk_001_RESET_SEQUENCE",
+      "chunk": "chunk_001",
+      "type": "HT1_Privilege",
+      "stealth": "Very High",
+      "damage": "Critical",
+      "detection_difficulty": "Very Hard",
+      "context_lines": "26-45",
+      "individual_module_file": "individual_trojan_modules/HT002_chunk_001_RESET_SEQUENCE_HT1_Privilege.sv",
+      "complete_file": "complete_files_single_trojan/RISCV_with_HT002.sv"
+    },
+    {
+      "id": "HT003",
+      "region": "chunk_001_RARE_DEFAULT_RECOVERY",
+      "chunk": "chunk_001",
+      "type": "HT2_Leakage",
+      "stealth": "Very High",
+      "damage": "Critical",
+      "detection_difficulty": "Extremely Hard",
+      "context_lines": "72-80",
+      "individual_module_file": "individual_trojan_modules/HT003_chunk_001_RARE_DEFAULT_RECOVERY_HT2_Leakage.sv",
+      "complete_file": "complete_files_single_trojan/RISCV_with_HT003.sv"
+    }
+  ]
+}

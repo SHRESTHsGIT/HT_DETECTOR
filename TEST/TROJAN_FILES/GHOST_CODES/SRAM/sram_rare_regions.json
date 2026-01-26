@@ -1,0 +1,37 @@
+{
+  "file_metadata": {
+    "source_file": "sram.v",
+    "total_chunks_analyzed": 2,
+    "chunks_with_rare_regions": 1,
+    "total_rare_regions": 2,
+    "analysis_timestamp": "2025-10-08T12:56:45.770362"
+  },
+  "rare_regions": [
+    {
+      "chunk_id": "chunk_002",
+      "rare_region_type": "CONDITIONAL_DEBUG_OUTPUT",
+      "rare_region_code": "if (!csb0_reg && web0_reg)\n  $display($time, \" Reading %m addr0=%b dout0=%b\", addr0_reg, mem[addr0_reg]);",
+      "activation_trigger": "Read operation when chip is enabled and write is disabled",
+      "confidence_score": 0.8,
+      "description": "Displays memory read activity; typically occurs less frequently than regular writes depending on system usage patterns",
+      "line_in_chunk": 34,
+      "absolute_line": 36,
+      "matched_line_content": "if (!csb0_reg && web0_reg)",
+      "match_type": "first_line_exact",
+      "line_range": "34-35"
+    },
+    {
+      "chunk_id": "chunk_002",
+      "rare_region_type": "CONDITIONAL_DEBUG_OUTPUT",
+      "rare_region_code": "if (!csb0_reg && !web0_reg)\n  $display($time, \" Writing %m addr0=%b din0=%b\", addr0_reg, din0_reg);",
+      "activation_trigger": "Write operation when chip is enabled and write is active",
+      "confidence_score": 0.8,
+      "description": "Displays memory write activity; may be infrequent if memory writes are rare compared to reads",
+      "line_in_chunk": 36,
+      "absolute_line": 38,
+      "matched_line_content": "if (!csb0_reg && !web0_reg)",
+      "match_type": "first_line_exact",
+      "line_range": "36-37"
+    }
+  ]
+}

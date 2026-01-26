@@ -1,0 +1,60 @@
+{
+  "file_metadata": {
+    "filename": "RISCV.sv",
+    "filepath": "/kaggle/working/RISCV.sv",
+    "total_lines": 202,
+    "language": "SystemVerilog",
+    "file_size_bytes": 5075,
+    "created_at": "2025-10-04T12:33:14.331437"
+  },
+  "chunks": {
+    "chunk_001": {
+      "chunk_id": "chunk_001",
+      "start_line": 1,
+      "end_line": 141,
+      "content": "module uart_tx #(\n    parameter CLK_FREQ = 50_000_000,\n    parameter BAUD_RATE = 115200\n)(\n    input  logic       clk,\n    input  logic       rst_n,\n    input  logic [7:0] tx_data,\n    input  logic       tx_valid,\n    output logic       tx_ready,\n    output logic       tx_out\n);\n\n    localparam int DIVISOR = CLK_FREQ / BAUD_RATE;\n    \n    typedef enum logic [2:0] {\n        IDLE,\n        START_BIT,\n        DATA_BITS,\n        STOP_BIT\n    } state_t;\n    \n    state_t state, next_state;\n    \n    logic [7:0] shift_reg;\n    logic [2:0] bit_counter;\n    logic [$clog2(DIVISOR)-1:0] baud_counter;\n    logic baud_tick;\n    \n    always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            baud_counter <= '0;\n            baud_tick <= 1'b0;\n        end else begin\n            if (baud_counter == DIVISOR - 1) begin\n                baud_counter <= '0;\n                baud_tick <= 1'b1;\n            end else begin\n                baud_counter <= baud_counter + 1;\n                baud_tick <= 1'b0;\n            end\n        end\n    end\n    \n    always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n)\n            state <= IDLE;\n        else\n            state <= next_state;\n    end\n    \n    always_comb begin\n        next_state = state;\n        \n        case (state)\n            IDLE: begin\n                if (tx_valid)\n                    next_state = START_BIT;\n            end\n            \n            START_BIT: begin\n                if (baud_tick)\n                    next_state = DATA_BITS;\n            end\n            \n            DATA_BITS: begin\n                if (baud_tick && bit_counter == 7)\n                    next_state = STOP_BIT;\n            end\n            \n            STOP_BIT: begin\n                if (baud_tick)\n                    next_state = IDLE;\n            end\n            \n            default: next_state = IDLE;\n        endcase\n    end\n    \n    always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            shift_reg <= '0;\n            bit_counter <= '0;\n            tx_out <= 1'b1;\n            tx_ready <= 1'b1;\n        end else begin\n            case (state)\n                IDLE: begin\n                    tx_out <= 1'b1;\n                    tx_ready <= 1'b1;\n                    if (tx_valid) begin\n                        shift_reg <= tx_data;\n                        tx_ready <= 1'b0;\n                    end\n                end\n                \n                START_BIT: begin\n                    tx_out <= 1'b0;\n                    bit_counter <= '0;\n                end\n                \n                DATA_BITS: begin\n                    if (baud_tick) begin\n                        tx_out <= shift_reg[0];\n                        shift_reg <= {1'b0, shift_reg[7:1]};\n                        bit_counter <= bit_counter + 1;\n                    end\n                end\n                \n                STOP_BIT: begin\n                    tx_out <= 1'b1;\n                end\n                \n                default: begin\n                    tx_out <= 1'b1;\n                    tx_ready <= 1'b1;\n                end\n            endcase\n        end\n    end\n    \n    `ifdef FORMAL\n\n        assert property (@(posedge clk) disable iff (!rst_n)\n            (state == IDLE || state == STOP_BIT) |-> tx_out == 1'b1\n        );\n        \n        assert property (@(posedge clk) disable iff (!rst_n)\n            (state != IDLE) |-> tx_ready == 1'b0\n        );\n    `endif\n\nendmodule",
+      "parent_module": null,
+      "parent_construct": "uart_tx",
+      "is_sub_chunk": false,
+      "parent_chunk": null,
+      "line_count": 111,
+      "construct_type": "module"
+    },
+    "chunk_002": {
+      "chunk_id": "chunk_002",
+      "start_line": 143,
+      "end_line": 143,
+      "content": "",
+      "parent_module": null,
+      "parent_construct": "misc_143",
+      "is_sub_chunk": false,
+      "parent_chunk": null,
+      "line_count": 0,
+      "construct_type": "miscellaneous"
+    },
+    "chunk_003": {
+      "chunk_id": "chunk_003",
+      "start_line": 144,
+      "end_line": 202,
+      "content": "module uart_tx_tb;\n    logic clk;\n    logic rst_n;\n    logic [7:0] tx_data;\n    logic tx_valid;\n    logic tx_ready;\n    logic tx_out;\n    \n    uart_tx #(\n        .CLK_FREQ(1_000_000),\n        .BAUD_RATE(9600)\n    ) dut (.*);\n    \n    initial begin\n        clk = 0;\n        forever #5 clk = ~clk;\n    end\n    \n    initial begin\n        rst_n = 0;\n        tx_valid = 0;\n        tx_data = 8'h00;\n        \n        #20 rst_n = 1;\n        #50;\n        \n        @(posedge clk);\n        tx_data = 8'h55;\n        tx_valid = 1;\n        @(posedge clk);\n        tx_valid = 0;\n        \n        wait(tx_ready);\n        #1000;\n        \n        @(posedge clk);\n        tx_data = 8'hAA;\n        tx_valid = 1;\n        @(posedge clk);\n        tx_valid = 0;\n        \n        wait(tx_ready);\n        #1000;\n        \n        $finish;\n    end\n    \n    initial begin\n        $monitor(\"Time=%0t rst_n=%b tx_data=%h tx_valid=%b tx_ready=%b tx_out=%b\", \n                 $time, rst_n, tx_data, tx_valid, tx_ready, tx_out);\n    end\n\nendmodule",
+      "parent_module": null,
+      "parent_construct": "uart_tx_tb",
+      "is_sub_chunk": false,
+      "parent_chunk": null,
+      "line_count": 42,
+      "construct_type": "module"
+    }
+  },
+  "chunk_sequence": [
+    "chunk_001",
+    "chunk_002",
+    "chunk_003"
+  ],
+  "chunking_stats": {
+    "total_chunks": 3,
+    "sub_chunks": 0,
+    "average_chunk_size": 51.0,
+    "constructs_preserved": 2,
+    "comments_removed": true
+  }
+}

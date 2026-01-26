@@ -1,0 +1,216 @@
+{
+  "trojan_analysis": {
+    "metadata": {
+      "source_file": "RISCV.sv",
+      "total_rare_regions": 7,
+      "regions_analyzed": 7,
+      "exploitable_regions": 6,
+      "analysis_timestamp": "2025-10-04T12:55:04.453314",
+      "research_purpose": "Hardware security vulnerability analysis and trojan susceptibility study"
+    },
+    "region_analysis": [
+      {
+        "region_id": "chunk_001_RESET_SEQUENCE",
+        "chunk_id": "chunk_001",
+        "original_rare_region": {
+          "rare_region_type": "RESET_SEQUENCE",
+          "code_snippet": "always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            baud_counter <= '0;\n            baud_tick <= 1'b0;\n        end else begin\n            if (baud_counter == DIVISOR - 1) begin\n                baud_counter <= '0;\n                baud_tick <= 1'b1;\n            end else begin\n                baud_counter <= baud_counter + 1;\n                baud_tick <= 1'b0;\n            end\n        end\n    end",
+          "activation_trigger": "Asynchronous reset asserted (rst_n deasserted / low) at power-up or reset event",
+          "confidence_score": 0.95,
+          "description": "Reset branch in the baud-rate generator always_ff block. This initialization path executes only when the asynchronous reset is asserted (rare during normal running operation)."
+        },
+        "code_context": [
+          "// RARE REGION: always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            baud_counter <= '0;\n            baud_tick <= 1'b0;\n        end else begin\n            if (baud_counter == DIVISOR - 1) begin\n                baud_counter <= '0;\n                baud_tick <= 1'b1;\n            end else begin\n                baud_counter <= baud_counter + 1;\n                baud_tick <= 1'b0;\n            end\n        end\n    end"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT2_Leakage",
+          "rationale": "The asynchronous-reset branch of the baud-rate generator executes rarely (only on reset events), yet it directly controls timing signals that feed the serial/baud domain. A trojan that modifies behavior in this path can leverage the serial/timing infrastructure to create a covert channel. Because this code executes infrequently and only during reset, modifications are unlikely to be exercised by typical functional tests, making it an attractive insertion point for data-exfiltration logic.",
+          "attack_method": "On reset, the trojan transiently tampers with the baud generator outputs or counter update sequence to encode a small amount of sensitive state (for example, bits from nearby configuration or status registers) into the timing/phase of early serial activity or into one-shot pulses produced during the reset-to-run transition. The encoded information is released only during rare reset events (e.g., on power-cycling or a specially timed external reset), producing a low-bandwidth covert channel over existing serial pins or by slightly altering observable timing that an attacker can measure off-chip. The payload is designed to be time-limited and dormant outside the reset window to minimize observable side-effects.",
+          "stealth_level": "Very High",
+          "damage_potential": "High",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_001_RESET_SEQUENCE",
+        "chunk_id": "chunk_001",
+        "original_rare_region": {
+          "rare_region_type": "RESET_SEQUENCE",
+          "code_snippet": "always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n)\n            state <= IDLE;\n        else\n            state <= next_state;\n    end",
+          "activation_trigger": "Asynchronous reset asserted (rst_n deasserted / low) to initialize state machine to IDLE",
+          "confidence_score": 0.94,
+          "description": "State register initialization on reset. The 'if (!rst_n)' branch runs only on reset, making this a rare execution region compared to normal state transitions."
+        },
+        "code_context": [
+          "// RARE REGION: always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n)\n            state <= IDLE;\n        else\n            state <= next_state;\n    end"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The reset-time assignment to the top-level state register is a high-leverage, rarely-exercised point: it deterministically places the state machine into IDLE and therefore establishes the only known safe start-up condition. A small modification in this rare branch can change the initial state or seed hidden control-flags that persist into normal operation, allowing privilege or access-control bypasses while leaving steady-state behavior nearly unchanged. Because the branch executes primarily at power-up/reset (infrequent during testing), such a modification is unlikely to be exercised or noticed by standard functional verification.",
+          "attack_method": "On the reset path, the trojan subtly alters the initialization so that under a rare, externally-controllable reset condition (for example, a specific reset timing or pattern) the state machine is seeded into an alternate 'backdoor' state or a hidden control bit is set. Once set, this altered initial condition enables privileged behaviors (bypassing checks, enabling test/debug ports, or elevating access to specific transactions) during normal operation without modifying the steady-state transition logic. The trigger and the privileged behavior are designed to be rare and transient at reset so they do not perturb normal test vectors or routine functional checks.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Very Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_001_RARE_DEFAULT_RECOVERY",
+        "chunk_id": "chunk_001",
+        "original_rare_region": {
+          "rare_region_type": "RARE_DEFAULT_RECOVERY",
+          "code_snippet": "            default: next_state = IDLE;\n        endcase\n    end",
+          "activation_trigger": "Encountering an undefined/invalid state value (state not matched by IDLE/START_BIT/DATA_BITS/STOP_BIT)",
+          "confidence_score": 0.86,
+          "description": "Default recovery in the combinational state transition logic. This path is intended to recover from invalid states \u2014 an uncommon event during correct operation, thus a rare region."
+        },
+        "code_context": [
+          "            end",
+          "",
+          "            STOP_BIT: begin",
+          "                if (baud_tick)",
+          "                    next_state = IDLE;",
+          "            end",
+          "",
+          "            default: next_state = IDLE;  // <-- RARE REGION",
+          "        endcase",
+          "    end",
+          "",
+          "    always_ff @(posedge clk or negedge rst_n) begin",
+          "        if (!rst_n) begin",
+          "            shift_reg <= '0;",
+          "            bit_counter <= '0;"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT2_Leakage",
+          "rationale": "The combinational `default` in the next-state logic is executed only when the state register contains an unexpected/invalid value \u2014 a rare recovery path that designers assume will not occur during normal operation. An attacker can hijack this recovery point to steer the state machine into a hidden exfiltration state when an invalid-state condition is induced (e.g., via a specially timed reset, glitch, or power event). Because the injection point is exercised infrequently and only under abnormal conditions, modified behavior is unlikely to appear in standard functional test vectors or regression suites, making it ideal for covert data leakage.",
+          "attack_method": "Modify the default branch so that, when an invalid state is detected, `next_state` is routed into a stealthy 'EXFIL' state instead of the normal `IDLE`. On the following clock edges the sequential logic (shift_reg/bit_counter or nearby I/O control lines) is used to sample small amounts of sensitive on-chip state (status/config/crypto registers) and encode those bits into low-bandwidth signals: e.g., precise timing shifts on an existing serial TX line, one-shot pulses on an otherwise-unused status pin, or bit-serial leaks timed across several rare recovery events. The trigger (invalid state) can be made easy to induce only by an attacker (glitch/reset sequence) but hard to hit during normal testing. The exfiltration occurs only in the few cycles after the invalid-state transition and then returns the machine to benign behavior, minimizing observable functional deviation.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_001_FORMAL_ONLY_ASSERTIONS",
+        "chunk_id": "chunk_001",
+        "original_rare_region": {
+          "rare_region_type": "FORMAL_ONLY_ASSERTIONS",
+          "code_snippet": "`ifdef FORMAL\n\n        assert property (@(posedge clk) disable iff (!rst_n)\n            (state == IDLE || state == STOP_BIT) |-> tx_out == 1'b1\n        );\n        \n        assert property (@(posedge clk) disable iff (!rst_n)\n            (state != IDLE) |-> tx_ready == 1'b0\n        );\n    `endif",
+          "activation_trigger": "`FORMAL` define enabled (formal verification build); assertions exercised during formal checks, not in normal synthesis or runtime",
+          "confidence_score": 0.99,
+          "description": "Assertions wrapped in `ifdef FORMAL` are only active during formal verification runs. They represent verification-only checks and are not executed in typical hardware operation \u2014 a distinctly rare/conditional execution domain."
+        },
+        "code_context": [
+          "// RARE REGION: `ifdef FORMAL\n\n        assert property (@(posedge clk) disable iff (!rst_n)\n            (state == IDLE || state == STOP_BIT) |-> tx_out == 1'b1\n        );\n        \n        assert property (@(posedge clk) disable iff (!rst_n)\n            (state != IDLE) |-> tx_ready == 1'b0\n        );\n    `endif"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "Assertions inside `ifdef FORMAL` are only active during formal verification runs and are not present in the synthesized silicon. An attacker can tamper with those formal-only checks (weaken, vacuously satisfy, or add restrictive assumptions) so the formal tool certifies the design as safe while a backdoor elsewhere in the RTL remains unchecked. In other words, compromising the verification-only domain lets a trojan elsewhere (which executes in hardware) slip through verification and provide privileged bypasses at runtime.",
+          "attack_method": "Modify or augment the `ifdef FORMAL` block so that proofs are vacuous or environment assumptions hide the real threat. Examples: replace a strong assertion with `assert property (1);`, add `assume` properties that forbid the adversarial input sequences used to trigger the backdoor, or insert formal-only scaffolding that models expected benign behavior while the actual RTL implements a backdoor state or control flag. The attacker then places the real privilege-elevation trojan in synthesizable RTL (outside `FORMAL`) that is never exercised under the constrained formal environment. As a variant, the attacker could add a formal-only stimulus generator that proves safety but never exercises the reset/glitch sequences required to see the trojan, thereby masking it from formal checks.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_003_RESET_AND_TEST_STIMULUS",
+        "chunk_id": "chunk_003",
+        "original_rare_region": {
+          "rare_region_type": "RESET_AND_TEST_STIMULUS",
+          "code_snippet": "    initial begin\n        rst_n = 0;\n        tx_valid = 0;\n        tx_data = 8'h00;\n        \n        #20 rst_n = 1;\n        #50;\n        \n        @(posedge clk);\n        tx_data = 8'h55;\n        tx_valid = 1;\n        @(posedge clk);\n        tx_valid = 0;\n        \n        wait(tx_ready);\n        #1000;\n        \n        @(posedge clk);\n        tx_data = 8'hAA;\n        tx_valid = 1;\n        @(posedge clk);\n        tx_valid = 0;\n        \n        wait(tx_ready);\n        #1000;\n        \n        $finish;\n    end",
+          "activation_trigger": "Simulation reset assertion/deassertion and explicit test stimulus sequence (initial block executed at simulation start)",
+          "confidence_score": 0.97,
+          "description": "This initial block performs reset (rst_n asserted then deasserted), drives two transmit transactions, waits for tx_ready, and calls $finish. Reset and end-of-simulation behavior are initialization/termination events and the specific wait-for-ready paths are only exercised during the test \u2014 making this a rare/one-shot execution region in the context of continuous hardware operation."
+        },
+        "code_context": [
+          "// RARE REGION: initial begin\n        rst_n = 0;\n        tx_valid = 0;\n        tx_data = 8'h00;\n        \n        #20 rst_n = 1;\n        #50;\n        \n        @(posedge clk);\n        tx_data = 8'h55;\n        tx_valid = 1;\n        @(posedge clk);\n        tx_valid = 0;\n        \n        wait(tx_ready);\n        #1000;\n        \n        @(posedge clk);\n        tx_data = 8'hAA;\n        tx_valid = 1;\n        @(posedge clk);\n        tx_valid = 0;\n        \n        wait(tx_ready);\n        #1000;\n        \n        $finish;\n    end"
+        ],
+        "no_suitable_ht": true,
+        "analysis_note": "No suitable hardware trojan type identified for this region"
+      },
+      {
+        "region_id": "chunk_003_WAIT_FOR_READY_SUSPENSION",
+        "chunk_id": "chunk_003",
+        "original_rare_region": {
+          "rare_region_type": "WAIT_FOR_READY_SUSPENSION",
+          "code_snippet": "        wait(tx_ready);",
+          "activation_trigger": "Waiting for DUT to assert tx_ready before continuing (synchronization point in test stimulus)",
+          "confidence_score": 0.9,
+          "description": "The `wait(tx_ready);` statements (used twice in the stimulus block) cause the testbench to pause until the DUT signals readiness. In hardware these synchronization points represent rare/uncommon timing conditions (especially if the DUT stalls or deadlocks), and are only executed during the specific test sequence."
+        },
+        "code_context": [
+          "",
+          "        @(posedge clk);",
+          "        tx_data = 8'h55;",
+          "        tx_valid = 1;",
+          "        @(posedge clk);",
+          "        tx_valid = 0;",
+          "",
+          "        wait(tx_ready);  // <-- RARE REGION",
+          "        #1000;",
+          "",
+          "        @(posedge clk);",
+          "        tx_data = 8'hAA;",
+          "        tx_valid = 1;",
+          "        @(posedge clk);",
+          "        tx_valid = 0;",
+          "",
+          "        wait(tx_ready);  // <-- RARE REGION",
+          "        #1000;",
+          "",
+          "        $finish;",
+          "    end",
+          "",
+          "    initial begin",
+          "        $monitor(\"Time=%0t rst_n=%b tx_data=%h tx_valid=%b tx_ready=%b tx_out=%b\","
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT3_Performance",
+          "rationale": "The `wait(tx_ready);` points in the test stimulus correspond to a handshake synchronization in the DUT (tx_ready). A trojan that manipulates the readiness handshake can force stalls, indefinite waits, or carefully timed delays. Those behaviors map naturally to performance attacks (denial-of-service, hangs, throughput degradation) and can be triggered rarely so they escape normal functional tests. While timing modulation can also carry information (leakage), the most direct and reliable impact from tampering with `tx_ready` is performance disruption, making HT3_Performance the best fit.",
+          "attack_method": "Embed logic in the DUT that monitors a rare trigger (e.g., a specific reset/timing/glitch pattern, a rarely-set configuration bit, or a long sequence of innocuous transactions). When the trigger fires, the trojan forces `tx_ready` to remain low, to assert misleading ready pulses, or to introduce deterministic multi-cycle stalls. Variants:\n  \u2022 Denial: hold `tx_ready` low until an external attacker performs a second, out-of-band action (causes permanent or long-lived stalls of the transmitter).\n  \u2022 Throttling: insert periodic long stalls to reduce throughput and induce timeouts in higher-level protocols.\n  \u2022 Conditional lockup: enter a locked state that requires a rare sequence to recover, effectively disabling the interface.\nThese behaviors can be gated to run only following rare sequences so normal regression and short tests won't exercise them. As a secondary capability, the trojan can modulate the timing of `tx_ready` pulses (short/long pulses or inter-pulse spacing) to encode small amounts of data as a covert timing channel.",
+          "stealth_level": "Very High",
+          "damage_potential": "High",
+          "detection_difficulty": "Very Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_003_DEBUG_MONITOR",
+        "chunk_id": "chunk_003",
+        "original_rare_region": {
+          "rare_region_type": "DEBUG_MONITOR",
+          "code_snippet": "    initial begin\n        $monitor(\"Time=%0t rst_n=%b tx_data=%h tx_valid=%b tx_ready=%b tx_out=%b\", \n                 $time, rst_n, tx_data, tx_valid, tx_ready, tx_out);\n    end",
+          "activation_trigger": "Simulation start (initial block enabling runtime monitoring/logging)",
+          "confidence_score": 0.92,
+          "description": "$monitor is a simulation-only observation/debug facility. It runs only under simulation and is not synthesizable \u2014 making it a rare/diagnostic execution region compared with normal synthesized logic."
+        },
+        "code_context": [
+          "        wait(tx_ready);",
+          "        #1000;",
+          "",
+          "        $finish;",
+          "    end",
+          "",
+          "    initial begin",
+          "        $monitor(\"Time=%0t rst_n=%b tx_data=%h tx_valid=%b tx_ready=%b tx_out=%b\",  // <-- RARE REGION",
+          "                 $time, rst_n, tx_data, tx_valid, tx_ready, tx_out);",
+          "    end",
+          "",
+          "endmodule"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The `$monitor` initial block is a simulation-only observation point used by engineers to see runtime signal values. An attacker who tampers with this rare diagnostic domain can hide or falsify evidence of malicious behavior during verification (making the DUT appear benign) while the synthesized silicon implements a privilege-elevation backdoor. In other words, compromise of simulation/monitoring scaffolding lets a privilege-type trojan slip through verification unnoticed and then operate in deployed hardware.",
+          "attack_method": "Add or modify simulation-only instrumentation so the monitor reports sanitized/forged values during simulation while the real RTL implements a backdoor. Practical realizations include: (1) wrap the `$monitor` inputs with a `ifdef SIM` filter that substitutes attacker-controlled benign values when a special trigger is present; (2) add a simulation-only module that intercepts signals (or injects corrected values) so printed traces never show the malicious state transitions; (3) include a synthesis-vs-sim guard in RTL (`ifdef SYNTH`) so the design behaves correctly under simulation but sets hidden control flags or seeds a privileged initial state in silicon. The trigger for the backdoor can be a rare reset/timing pattern or a concealed configuration bit so normal tests and the `$monitor` output remain clean while privilege escalation is possible in the field.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      }
+    ]
+  }
+}

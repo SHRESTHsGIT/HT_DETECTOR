@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "total_implementations": 5,
+    "source_file": "uart_rx.v",
+    "base_filename": "uart_rx",
+    "output_directory": "/kaggle/working/final_trojan_files"
+  },
+  "files_generated": {
+    "original": "UART_RX_ORIGINAL.sv",
+    "individual_modules": [
+      "individual_trojan_modules/HT001_chunk_002_RESET_INITIALIZATION_HT1_Crypto.sv",
+      "individual_trojan_modules/HT002_chunk_002_BYTE-COMPLETE_BREAK_DETECTION_HT2_Leakage.sv",
+      "individual_trojan_modules/HT003_chunk_002_FSM_DEFAULT_ERROR-FALLBACK_HT2_Leakage.sv",
+      "individual_trojan_modules/HT004_chunk_002_RX_SAMPLE_GATING_ENABLE-DRIVEN_HT2_Leakage.sv",
+      "individual_trojan_modules/HT005_chunk_002_BIT-TIMING_COUNTER_ROLLOVER_NEXT-BIT_EVENT_HT2_Leakage.sv"
+    ],
+    "complete_single_trojan": [
+      "complete_files_single_trojan/uart_rx_with_HT001.sv",
+      "complete_files_single_trojan/uart_rx_with_HT002.sv",
+      "complete_files_single_trojan/uart_rx_with_HT003.sv",
+      "complete_files_single_trojan/uart_rx_with_HT004.sv",
+      "complete_files_single_trojan/uart_rx_with_HT005.sv"
+    ],
+    "all_trojans_combined": "all_trojans_combined/UART_RX_ALL_TROJANS.sv"
+  },
+  "trojan_details": [
+    {
+      "id": "HT001",
+      "region": "chunk_002_RESET/INITIALIZATION",
+      "chunk": "chunk_002",
+      "type": "HT1_Crypto",
+      "stealth": "Very High",
+      "damage": "Critical",
+      "detection_difficulty": "Extremely Hard",
+      "context_lines": "69-87",
+      "individual_module_file": "individual_trojan_modules/HT001_chunk_002_RESET_INITIALIZATION_HT1_Crypto.sv",
+      "complete_file": "complete_files_single_trojan/uart_rx_with_HT001.sv"
+    },
+    {
+      "id": "HT002",
+      "region": "chunk_002_BYTE-COMPLETE / BREAK DETECTION",
+      "chunk": "chunk_002",
+      "type": "HT2_Leakage",
+      "stealth": "Very High",
+      "damage": "Critical",
+      "detection_difficulty": "Extremely Hard",
+      "context_lines": "43-50",
+      "individual_module_file": "individual_trojan_modules/HT002_chunk_002_BYTE-COMPLETE_BREAK_DETECTION_HT2_Leakage.sv",
+      "complete_file": "complete_files_single_trojan/uart_rx_with_HT002.sv"
+    },
+    {
+      "id": "HT003",
+      "region": "chunk_002_FSM DEFAULT / ERROR-FALLBACK",
+      "chunk": "chunk_002",
+      "type": "HT2_Leakage",
+      "stealth": "Very High",
+      "damage": "Critical",
+      "detection_difficulty": "Extremely Hard",
+      "context_lines": "59-73",
+      "individual_module_file": "individual_trojan_modules/HT003_chunk_002_FSM_DEFAULT_ERROR-FALLBACK_HT2_Leakage.sv",
+      "complete_file": "complete_files_single_trojan/uart_rx_with_HT003.sv"
+    },
+    {
+      "id": "HT004",
+      "region": "chunk_002_RX SAMPLE GATING (ENABLE-DRIVEN)",
+      "chunk": "chunk_002",
+      "type": "HT2_Leakage",
+      "stealth": "High",
+      "damage": "High",
+      "detection_difficulty": "Very Hard",
+      "context_lines": "121-134",
+      "individual_module_file": "individual_trojan_modules/HT004_chunk_002_RX_SAMPLE_GATING_ENABLE-DRIVEN_HT2_Leakage.sv",
+      "complete_file": "complete_files_single_trojan/uart_rx_with_HT004.sv"
+    },
+    {
+      "id": "HT005",
+      "region": "chunk_002_BIT-TIMING COUNTER ROLLOVER / NEXT-BIT EVENT",
+      "chunk": "chunk_002",
+      "type": "HT2_Leakage",
+      "stealth": "High",
+      "damage": "High",
+      "detection_difficulty": "Very Hard",
+      "context_lines": "101-117",
+      "individual_module_file": "individual_trojan_modules/HT005_chunk_002_BIT-TIMING_COUNTER_ROLLOVER_NEXT-BIT_EVENT_HT2_Leakage.sv",
+      "complete_file": "complete_files_single_trojan/uart_rx_with_HT005.sv"
+    }
+  ]
+}

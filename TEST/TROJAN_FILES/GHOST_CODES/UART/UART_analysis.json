@@ -1,0 +1,103 @@
+{
+  "folder": "UART",
+  "full_path": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/TEST/TROJAN_FILES/GHOST_CODES/UART",
+  "timestamp": "2025-10-12T16:12:04.939781",
+  "total_files": 8,
+  "files": [
+    {
+      "file": "uart_rx_with_HT001.sv",
+      "relative_path": "uart_rx_with_HT001.sv",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": 0.9278702735900879,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9278702735900879,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.0721297413110733
+    },
+    {
+      "file": "uart_rx_with_HT004.sv",
+      "relative_path": "uart_rx_with_HT004.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9289675951004028,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5339859649538994
+    },
+    {
+      "file": "uart_rx_with_HT002.sv",
+      "relative_path": "uart_rx_with_HT002.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9289675951004028,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5339859649538994
+    },
+    {
+      "file": "uart_rx_with_HT005.sv",
+      "relative_path": "uart_rx_with_HT005.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9288944602012634,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5340225547552109
+    },
+    {
+      "file": "uart_rx_HT2_gpt-4_A1_GHOST.v",
+      "relative_path": "uart_rx_HT2_gpt-4_A1_GHOST.v",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9278702735900879,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.534534640610218
+    },
+    {
+      "file": "uart_rx.v",
+      "relative_path": "uart_rx.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": 0.9289675951004028,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9289675951004028,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.07103238999843597
+    },
+    {
+      "file": "uart_rx_HT1_gpt-4_A1_GHOST.v",
+      "relative_path": "uart_rx_HT1_gpt-4_A1_GHOST.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": 0.9278731346130371,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9278731346130371,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.0721268504858017
+    },
+    {
+      "file": "uart_rx_with_HT003.sv",
+      "relative_path": "uart_rx_with_HT003.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9289675951004028,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5339859649538994
+    }
+  ],
+  "summary": {
+    "total_analyzed": 8,
+    "trojans_detected": 5,
+    "clean_designs": 3,
+    "errors": 0,
+    "avg_trojan_probability": 0.36072550900280476
+  }
+}

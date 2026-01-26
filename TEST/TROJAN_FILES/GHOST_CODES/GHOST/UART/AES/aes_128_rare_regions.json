@@ -1,0 +1,10 @@
+{
+  "file_metadata": {
+    "source_file": "aes_128.v",
+    "total_chunks_analyzed": 3,
+    "chunks_with_rare_regions": 0,
+    "total_rare_regions": 0,
+    "analysis_timestamp": "2025-10-08T09:19:55.858025"
+  },
+  "rare_regions": []
+}

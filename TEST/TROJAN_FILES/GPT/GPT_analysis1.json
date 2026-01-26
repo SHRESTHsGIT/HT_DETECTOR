@@ -1,0 +1,81 @@
+{
+  "folder": "GPT",
+  "full_path": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/TEST/TROJAN_FILES/GPT",
+  "timestamp": "2025-10-10T07:35:20.051401",
+  "total_files": 6,
+  "files": [
+    {
+      "file": "UART-TX_GPT_HT004.sv",
+      "relative_path": "UART-TX_GPT_HT004.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9938530921936035,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5015432043001056
+    },
+    {
+      "file": "UART-TX.v",
+      "relative_path": "UART-TX.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "UART-TX_GPT_HT001.sv",
+      "relative_path": "UART-TX_GPT_HT001.sv",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "UART-TX-GPT_HT005.sv",
+      "relative_path": "UART-TX-GPT_HT005.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9938530921936035,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5015432043001056
+    },
+    {
+      "file": "UART-TX-GPT_HT003.sv",
+      "relative_path": "UART-TX-GPT_HT003.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9938530921936035,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5015432043001056
+    },
+    {
+      "file": "UART-TX-GPT_HT002.sv",
+      "relative_path": "UART-TX-GPT_HT002.sv",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    }
+  ],
+  "summary": {
+    "total_analyzed": 6,
+    "trojans_detected": 3,
+    "clean_designs": 0,
+    "errors": 3,
+    "avg_trojan_probability": -0.24922839784994721
+  }
+}

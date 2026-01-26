@@ -1,0 +1,444 @@
+{
+  "trojan_analysis": {
+    "metadata": {
+      "source_file": "RISCV.sv",
+      "total_rare_regions": 18,
+      "regions_analyzed": 16,
+      "exploitable_regions": 16,
+      "analysis_timestamp": "2025-10-02T20:37:45.033086",
+      "research_purpose": "Hardware security vulnerability analysis and trojan susceptibility study"
+    },
+    "region_analysis": [
+      {
+        "region_id": "chunk_002_a_HAZARD_DETECTION",
+        "chunk_id": "chunk_002_a",
+        "original_rare_region": {
+          "rare_region_type": "HAZARD_DETECTION",
+          "code_snippet": "wire load_use_hazard = idex_memread & idex_valid & ifid_valid & (\n    (id_use_rs1 && (idex_rd != 5'd0) && (idex_rd == id_rs1)) ||\n    (id_use_rs2 && (idex_rd != 5'd0) && (idex_rd == id_rs2))\n);",
+          "activation_trigger": "Occurs when the instruction in EX stage is a memory read and the next instruction in ID stage depends on that memory value.",
+          "confidence_score": 0.95,
+          "description": "Detects load-use hazards which happen infrequently, only when a memory-read instruction is immediately followed by an instruction that uses the loaded value."
+        },
+        "code_context": [
+          "// RARE REGION: wire load_use_hazard = idex_memread & idex_valid & ifid_valid & (\n    (id_use_rs1 && (idex_rd != 5'd0) && (idex_rd == id_rs1)) ||\n    (id_use_rs2 && (idex_rd != 5'd0) && (idex_rd == id_rs2))\n);"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT2_Leakage",
+          "rationale": "The load-use hazard is a narrow, infrequently exercised window where a freshly loaded value is live in the pipeline and the following instruction consumes it. That brief, data-rich interval gives a trojan a chance to observe or subtly influence a sensitive datum (for example a key, pointer, or control word) without touching common, heavily-tested datapaths. Because the condition (memory-read immediately followed by dependent instruction) is rare in typical benchmarks and standard functional tests, a leakage trojan triggered there can remain dormant during verification and only exfiltrate when the rare pattern occurs in the field.",
+          "attack_method": "High-level: add a tiny, dormant datapath or timing modifier that is only enabled when the load-use hazard signal is asserted. When enabled, the logic creates a small, data-dependent observable effect (for example a subtle timing variation, a microarchitectural side effect, or controlled contention) correlated with selected bits of the loaded value. That observable effect can be turned into a covert channel (timing, contention, or microarchitectural state) to leak bits over multiple rare-trigger events. The modification is constrained to the rare hazard window and remains quiescent otherwise, reducing the likelihood of detection during regular verification.",
+          "stealth_level": "Very High",
+          "damage_potential": "High",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_002_a_FORWARDING_LOGIC",
+        "chunk_id": "chunk_002_a",
+        "original_rare_region": {
+          "rare_region_type": "FORWARDING_LOGIC",
+          "code_snippet": "assign ex_op_a = (fwd_a_sel==2'd0) ? idex_r1 :\n                 (fwd_a_sel==2'd1) ? exmem_alu_y :\n                 (fwd_a_sel==2'd2) ? ((memwb_wb_sel==2'd0)?memwb_alu_y:(memwb_wb_sel==2'd1?memwb_mem_rdata:memwb_pc_plus4)) :\n                 idex_r1;\n\nassign ex_op_b_raw = (fwd_b_sel==2'd0) ? idex_r2 :\n                     (fwd_b_sel==2'd1) ? exmem_alu_y :\n                     (fwd_b_sel==2'd2) ? ((memwb_wb_sel==2'd0)?memwb_alu_y:(memwb_wb_sel==2'd1?memwb_mem_rdata:memwb_pc_plus4)) :\n                     idex_r2;",
+          "activation_trigger": "Triggered only when forwarding is required due to data dependencies, which is infrequent under typical instruction sequences.",
+          "confidence_score": 0.9,
+          "description": "Handles rare data forwarding cases to resolve hazards when EX stage operands depend on results from later pipeline stages."
+        },
+        "code_context": [
+          "        .exmem_rd(exmem_rd), .exmem_regwrite(exmem_regwrite & exmem_valid),",
+          "        .memwb_rd(memwb_rd), .memwb_regwrite(memwb_regwrite & memwb_valid),",
+          "        .fwd_a(fwd_a_sel), .fwd_b(fwd_b_sel)",
+          "    );",
+          "",
+          "    assign ex_op_a = (fwd_a_sel==2'd0) ? idex_r1 :",
+          "                     (fwd_a_sel==2'd1) ? exmem_alu_y :",
+          "                     (fwd_a_sel==2'd2) ? ((memwb_wb_sel==2'd0)?memwb_alu_y:(memwb_wb_sel==2'd1?memwb_mem_rdata:memwb_pc_plus4)) :  // <-- RARE REGION",
+          "                     idex_r1;",
+          "",
+          "    assign ex_op_b_raw = (fwd_b_sel==2'd0) ? idex_r2 :",
+          "                         (fwd_b_sel==2'd1) ? exmem_alu_y :",
+          "                         (fwd_b_sel==2'd2) ? ((memwb_wb_sel==2'd0)?memwb_alu_y:(memwb_wb_sel==2'd1?memwb_mem_rdata:memwb_pc_plus4)) :  // <-- RARE REGION",
+          "                         idex_r2;",
+          "",
+          "    assign ex_alu_b = idex_alusrc ? idex_imm : ex_op_b_raw;",
+          "",
+          "    alu alu0(",
+          "        .op(idex_aluop), .a(ex_op_a), .b(ex_alu_b), .y(ex_alu_y)",
+          "    );"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The forwarding-path case for memwb (fwd_sel==2) is exercised only when an instruction in EX must take a value written back in the same cycle \u2014 a relatively rare timing window. That path can carry ALU results, loaded memory data, or pc_plus4 (return addresses). A tiny malicious modification that selectively alters the value forwarded from memwb (only when memwb_wb_sel==2 or when the destination register is a link/return register) can silently corrupt return addresses or critical control data. Corrupting those values enables control-flow hijacks or privilege-escalation sequences while touching code paths that are seldom triggered in tests, making this region highly attractive for privilege-focused Trojans.",
+          "attack_method": "Payload implants a compact conditional datapath in the memwb->ex forwarding mux: when (fwd_a_sel==2 || fwd_b_sel==2) AND (memwb_wb_sel==2 OR memwb_rd==<target_link_reg>) AND a rare trigger pattern (e.g., a specific immediate value, sequence counter, or secret-dependent bit in the forwarded data) is met, the logic replaces the forwarded value with an attacker-chosen value or a computed offset (e.g., memwb_pc_plus4 + attacker_offset) or toggles a handful of high-order bits. This corrupts return/link values or pointers written back to registers that later drive control-flow (jalr/jr). The implant remains inert otherwise, only activating in the rare forwarding+pc_plus4 (or target-register) scenario, allowing an attacker to cause control-flow redirection or privilege escalation in deployed systems.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_002_a_BRANCH_TAKING",
+        "chunk_id": "chunk_002_a",
+        "original_rare_region": {
+          "rare_region_type": "BRANCH_TAKING",
+          "code_snippet": "assign pc_next = take_branch_ex ? branch_target_ex : (pc_if + 32'd4);",
+          "activation_trigger": "Occurs only when a branch is taken, which is relatively infrequent compared to sequential instruction execution.",
+          "confidence_score": 0.85,
+          "description": "Controls program counter update for branch instructions; most instructions do not alter PC via branches."
+        },
+        "code_context": [
+          ");",
+          "",
+          "    reg  [31:0] pc_if;",
+          "    wire [31:0] pc_next;",
+          "    wire        take_branch_ex;",
+          "    wire [31:0] branch_target_ex;",
+          "",
+          "    assign pc_next = take_branch_ex ? branch_target_ex : (pc_if + 32'd4);  // <-- RARE REGION",
+          "",
+          "    reg  [31:0] ifid_pc, ifid_instr;",
+          "    reg         ifid_valid;",
+          "",
+          "    assign imem_req  = 1'b1;",
+          "    assign imem_addr = pc_if;",
+          ""
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The pc update path is a direct control-flow choke point: changing pc_next when a branch is taken immediately redirects program execution. Branch-taking is relatively infrequent and exercised differently in tests vs. real workloads, so a tiny modification here can remain dormant in verification yet, when triggered, hijack control flow to privileged or malicious code (e.g., a hidden firmware routine or a jump into a ROP-style gadget region). That makes this rare branch-taking window an ideal insertion point for privilege-escalation or control-flow hijack Trojans.",
+          "attack_method": "Implant a compact conditional override in the pc_next logic: when take_branch_ex is true AND a rare trigger condition holds (example triggers: a specific sequence of branch targets, a secret-dependent bit pattern in branch_target_ex or in a small LFSR/sequence counter, or after N occurrences tracked by a tiny counter), replace branch_target_ex with an attacker-controlled address (or branch_target_ex + attacker_offset). The implant uses a minimal comparator + small counter/LFSR so it is almost never active during standard verification. Activation redirects execution to a concealed payload (in ROM/unused flash, or by patching the link/return register) that escalates privileges, flips a mode bit, or installs a persistent backdoor. The override can also be conditional on privilege-level or instruction context to avoid corrupting user-mode tests, further increasing stealth.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_002_b_BRANCH_HANDLING",
+        "chunk_id": "chunk_002_b",
+        "original_rare_region": {
+          "rare_region_type": "BRANCH_HANDLING",
+          "code_snippet": "assign take_branch_ex   = (idex_is_branch & ex_br_taken) | idex_is_jal | idex_is_jalr;\nassign branch_target_ex = idex_is_jalr ? (ex_op_a + idex_imm) & ~32'd1 :\n                          idex_is_jal  ? (idex_pc + idex_imm) :\n                          idex_is_branch ? (idex_pc + idex_imm) : 32'b0;",
+          "activation_trigger": "Triggered when a branch, JAL, or JALR instruction is executed, which occurs less frequently than normal sequential instructions.",
+          "confidence_score": 0.9,
+          "description": "Handles rare branch target calculation and branch decision logic in the EX stage."
+        },
+        "code_context": [
+          "// RARE REGION: assign take_branch_ex   = (idex_is_branch & ex_br_taken) | idex_is_jal | idex_is_jalr;\nassign branch_target_ex = idex_is_jalr ? (ex_op_a + idex_imm) & ~32'd1 :\n                          idex_is_jal  ? (idex_pc + idex_imm) :\n                          idex_is_branch ? (idex_pc + idex_imm) : 32'b0;"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The branch/take-branch logic is a direct control-flow nexus: it chooses the next PC when branches, JAL, or JALR occur. These events are less frequent and exercised differently in tests vs. deployed workloads, so a tiny conditional override here can remain dormant during verification and, when triggered, redirect execution to attacker-controlled code or privileged firmware. Because branch_target_ex is computed from multiple sources (pc+imm, op_a+imm, pc+4), a malicious modification can selectively target link/return targets or indirect jumps (JALR) to hijack control flow without altering the normal data path most of the time\u2014making it a natural insertion point for privilege-escalation Trojans.",
+          "attack_method": "Insert a minimal override in the branch_target_ex selection path that activates only when (a) take_branch_ex is asserted and (b) a rare trigger condition holds. Triggers can be: a specific sequence of branch target values, a particular bit pattern in idex_imm or ex_op_a, a small LFSR/counter match, or a secret-dependent bit in forwarded data. When triggered, the override replaces branch_target_ex with an attacker-chosen address (hardcoded ROM/FLASH offset, an address computed from pc+imm+offset, or a value assembled from low-entropy bits leaked from previous cycles). The replacement target points to a concealed payload (small routine in unused memory, a firmware shim, or an instruction sequence that flips privilege bits / sets trap vectors). To avoid detection, the logic only activates for specific branch types (e.g., JALR or link-register writes) and for rare contexts (privileged-mode checks or after many safe branches counted by a tiny counter), so standard functional tests and benchmarks almost never encounter the override.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_002_b_RESET_INITIALIZATION",
+        "chunk_id": "chunk_002_b",
+        "original_rare_region": {
+          "rare_region_type": "RESET_INITIALIZATION",
+          "code_snippet": "if (rst) begin\n    pc_if      <= 32'h0000_0000;\n    ifid_pc    <= 32'b0;\n    ifid_instr <= 32'b0;\n    ifid_valid <= 1'b0;\n\n    idex_pc        <= 32'b0; idex_r1 <= 32'b0; idex_r2 <= 32'b0; idex_imm <= 32'b0;\n    idex_rs1       <= 5'b0;  idex_rs2<= 5'b0;  idex_rd  <= 5'b0; idex_funct3 <= 3'b0;\n    idex_aluop     <= 4'b0;  idex_alusrc <= 1'b0;\n    idex_is_branch <= 1'b0;  idex_is_jal <= 1'b0; idex_is_jalr <= 1'b0;\n    idex_memread   <= 1'b0;  idex_memwrite <= 1'b0; idex_regwrite <= 1'b0; idex_wb_sel <= 2'b0;\n    idex_valid     <= 1'b0;\n\n    exmem_alu_y    <= 32'b0; exmem_store_data <= 32'b0; exmem_pc_plus4 <= 32'b0;\n    exmem_rd       <= 5'b0; exmem_funct3 <= 3'b0;\n    exmem_memread  <= 1'b0; exmem_memwrite <= 1'b0; exmem_regwrite <= 1'b0; exmem_wb_sel <= 2'b0;\n    exmem_valid    <= 1'b0;\n\n    memwb_alu_y    <= 32'b0; memwb_mem_rdata <= 32'b0; memwb_pc_plus4 <= 32'b0;\n    memwb_rd       <= 5'b0; memwb_regwrite <= 1'b0; memwb_wb_sel <= 2'b0; memwb_valid <= 1'b0;\nend",
+          "activation_trigger": "Occurs only on system reset, which is infrequent during normal operation.",
+          "confidence_score": 0.95,
+          "description": "Initializes all pipeline registers and control signals to safe default values during reset."
+        },
+        "code_context": [
+          "// RARE REGION: if (rst) begin\n    pc_if      <= 32'h0000_0000;\n    ifid_pc    <= 32'b0;\n    ifid_instr <= 32'b0;\n    ifid_valid <= 1'b0;\n\n    idex_pc        <= 32'b0; idex_r1 <= 32'b0; idex_r2 <= 32'b0; idex_imm <= 32'b0;\n    idex_rs1       <= 5'b0;  idex_rs2<= 5'b0;  idex_rd  <= 5'b0; idex_funct3 <= 3'b0;\n    idex_aluop     <= 4'b0;  idex_alusrc <= 1'b0;\n    idex_is_branch <= 1'b0;  idex_is_jal <= 1'b0; idex_is_jalr <= 1'b0;\n    idex_memread   <= 1'b0;  idex_memwrite <= 1'b0; idex_regwrite <= 1'b0; idex_wb_sel <= 2'b0;\n    idex_valid     <= 1'b0;\n\n    exmem_alu_y    <= 32'b0; exmem_store_data <= 32'b0; exmem_pc_plus4 <= 32'b0;\n    exmem_rd       <= 5'b0; exmem_funct3 <= 3'b0;\n    exmem_memread  <= 1'b0; exmem_memwrite <= 1'b0; exmem_regwrite <= 1'b0; exmem_wb_sel <= 2'b0;\n    exmem_valid    <= 1'b0;\n\n    memwb_alu_y    <= 32'b0; memwb_mem_rdata <= 32'b0; memwb_pc_plus4 <= 32'b0;\n    memwb_rd       <= 5'b0; memwb_regwrite <= 1'b0; memwb_wb_sel <= 2'b0; memwb_valid <= 1'b0;\nend"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The reset initializer is the single, authoritative place that sets program counter, pipeline state, and many control flags. A tiny modification here can set privileged mode bits, change the reset vector (pc_if), or preload registers with attacker-chosen values before normal software or OS initialization runs. Because reset happens rarely (typically only at boot or after manual resets) and functional tests often exercise only normal runtime behavior, a reset-time implant can remain dormant during verification yet guarantee control as soon as the device boots in the field.",
+          "attack_method": "Implant a minimal conditional override inside the reset branch: when rst is asserted AND a very low-rate covert trigger is matched (examples: a small LFSR matches a programmed seed, a specific pattern on unused input pins, or a particular number of prior resets counted by a tiny counter), modify one or more of the initial assignments. Possible actions:\n  \u2022 Set pc_if to an attacker-controlled address (redirect boot to hidden firmware blob in unused flash/ROM).\n  \u2022 Set control/privilege bits or trap vector registers so later software runs with escalated privileges or with hooks enabled.\n  \u2022 Preload specific registers (link/stack pointers) with values that redirect execution later or leak state to peripherals.\nThe implant uses only a few gates (comparator, small counter/LFSR, ANDs) so it is almost never observed in normal test benches. Attack activation can be time- or event-gated so that only devices in the field that see the trigger ever boot into the compromised state.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_002_b_LOAD_USE_HAZARD_FLUSH",
+        "chunk_id": "chunk_002_b",
+        "original_rare_region": {
+          "rare_region_type": "LOAD_USE_HAZARD_FLUSH",
+          "code_snippet": "if (load_use_hazard) begin\n\n    idex_valid     <= 1'b0;\n    idex_pc        <= 32'b0;\n    idex_r1        <= 32'b0;\n    idex_r2        <= 32'b0;\n    idex_imm       <= 32'b0;\n    idex_rs1       <= 5'b0; idex_rs2 <= 5'b0; idex_rd <= 5'b0;\n    idex_funct3    <= 3'b0; idex_aluop <= 4'b0; idex_alusrc <= 1'b0;\n    idex_is_branch <= 1'b0; idex_is_jal <= 1'b0; idex_is_jalr <= 1'b0;\n    idex_memread   <= 1'b0; idex_memwrite <= 1'b0; idex_regwrite <= 1'b0; idex_wb_sel <= 2'b0;\nend",
+          "activation_trigger": "Triggered only when a load-use hazard is detected, which is relatively rare depending on instruction sequences.",
+          "confidence_score": 0.9,
+          "description": "Flushes the ID/EX pipeline register to prevent incorrect execution when a load-use hazard occurs."
+        },
+        "code_context": [
+          "// RARE REGION: if (load_use_hazard) begin\n\n    idex_valid     <= 1'b0;\n    idex_pc        <= 32'b0;\n    idex_r1        <= 32'b0;\n    idex_r2        <= 32'b0;\n    idex_imm       <= 32'b0;\n    idex_rs1       <= 5'b0; idex_rs2 <= 5'b0; idex_rd <= 5'b0;\n    idex_funct3    <= 3'b0; idex_aluop <= 4'b0; idex_alusrc <= 1'b0;\n    idex_is_branch <= 1'b0; idex_is_jal <= 1'b0; idex_is_jalr <= 1'b0;\n    idex_memread   <= 1'b0; idex_memwrite <= 1'b0; idex_regwrite <= 1'b0; idex_wb_sel <= 2'b0;\nend"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT2_Leakage",
+          "rationale": "The load-use-hazard flush is a very narrow, infrequently exercised window where a freshly-loaded value is known to be live in the pipeline just before the pipeline is cleared. That makes it a rich point to sample sensitive data (loaded key material, pointers, return values) without touching the main, heavily-tested datapaths. Because flushes happen rarely and are exercised differently in typical verification benches, a tiny leakage trojan that triggers only during these flush events can remain dormant during functional testing yet steadily exfiltrate bits in the field over many rare occurrences.",
+          "attack_method": "Payload logic samples one or more idex fields (idex_r1/idex_r2/idex_rd or idex_imm) at the moment load_use_hazard is true \u2014 but instead of letting them be simply cleared, the trojan routes a few selected bits into an otherwise-unused microarchitectural side-effect that forms a covert channel. Realistic covert channels for this region include:\n  \u2022 Timing channel: insert a 1-cycle stall or an extra flush on flush events when the sampled bit==1; external observers measure small timing differences across many rare flushes to recover bits.\n  \u2022 Contention channel: momentarily assert a non-critical bus/request (e.g., toggle a spare internal handshake line or briefly drive an otherwise-idle debug/test signal) correlated with sampled bits; downstream power/EM/timing side-channels leak it.\n  \u2022 State-channel via forwarding: route a sampled bit into a forwarded value (e.g., flip a low-order bit of memwb_pc_plus4 or memwb_alu_y when forwarding occurs) so the software-visible control flow or timing subtly encodes secret bits across multiple events.\nThe trojan only enables sampling when load_use_hazard AND a very-rare trigger are both true (examples: LFSR/counter match, specific bit-pattern in the loaded value, or a particular sequence count), ensuring near-zero activation during standard verification. Bits are exfiltrated slowly across many flush events to avoid detection.",
+          "stealth_level": "Very High",
+          "damage_potential": "High",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_002_b_BRANCH_FLUSH",
+        "chunk_id": "chunk_002_b",
+        "original_rare_region": {
+          "rare_region_type": "BRANCH_FLUSH",
+          "code_snippet": "if (ex_flush) begin\n    idex_valid     <= 1'b0;\n    idex_pc        <= 32'b0;\n    idex_r1        <= 32'b0;\n    idex_r2        <= 32'b0;\n    idex_imm       <= 32'b0;\n    idex_rs1       <= 5'b0; idex_rs2 <= 5'b0; idex_rd <= 5'b0;\n    idex_funct3    <= 3'b0; idex_aluop <= 4'b0; idex_alusrc <= 1'b0;\n    idex_is_branch <= 1'b0; idex_is_jal <= 1'b0; idex_is_jalr <= 1'b0;\n    idex_memread   <= 1'b0; idex_memwrite <= 1'b0; idex_regwrite <= 1'b0; idex_wb_sel <= 2'b0;\nend",
+          "activation_trigger": "Triggered when a branch is taken, flushing the EX stage pipeline register, which happens infrequently.",
+          "confidence_score": 0.85,
+          "description": "Clears EX stage pipeline registers on branch flush to maintain correct program flow."
+        },
+        "code_context": [
+          "// RARE REGION: if (ex_flush) begin\n    idex_valid     <= 1'b0;\n    idex_pc        <= 32'b0;\n    idex_r1        <= 32'b0;\n    idex_r2        <= 32'b0;\n    idex_imm       <= 32'b0;\n    idex_rs1       <= 5'b0; idex_rs2 <= 5'b0; idex_rd <= 5'b0;\n    idex_funct3    <= 3'b0; idex_aluop <= 4'b0; idex_alusrc <= 1'b0;\n    idex_is_branch <= 1'b0; idex_is_jal <= 1'b0; idex_is_jalr <= 1'b0;\n    idex_memread   <= 1'b0; idex_memwrite <= 1'b0; idex_regwrite <= 1'b0; idex_wb_sel <= 2'b0;\nend"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The EX-stage branch-flush path is a control-flow safety net that clears pipeline state when a branch is taken. It directly affects what executes next (by discarding in-flight instructions and ensuring the correct target runs). Because branch-flush events are relatively infrequent and exercised differently in verification versus field workloads, a tiny modification in this branch-flush code can silently inject or preserve attacker-chosen state (PC or register values) that causes execution to jump to privileged firmware or payloads. The rarity of flush events and the brief time window make such implants unlikely to be observed during typical tests, making privilege-focused Trojans a natural fit.",
+          "attack_method": "Implant a compact conditional override inside the ex_flush branch: when (ex_flush) AND a very-rare trigger condition is satisfied (examples: an LFSR/counter match, a specific sequence of branch targets, a particular bit pattern in idex_imm or idex_rs1, or an external pin pattern), do not clear idex_pc/idex_r1/idex_r2 as normal. Instead: \n  1) Replace idex_pc with an attacker-chosen address (bootloader/ROM offset or a computed offset from the current PC) so the next fetched instruction sequence comes from attacker-controlled memory, or\n  2) Preload idex_r1/idex_r2/idex_imm with values that form a crafted ALU/store/branch instruction when they get executed (e.g., load a pointer to a hidden firmware blob into a register and execute a JALR next), or\n  3) Flip a small number of low-order bits in idex_rd or idex_wb_sel to route a link/return to attacker space.\nThe trigger gating ensures functionally normal behavior in tests (almost never meeting the trigger), while the override on rare flushes gives the attacker deterministic control-flow hijack or persistent privilege escalation in the field. The implant requires only a few gates (comparator, small counter/LFSR, multiplexor) and is constrained to the flush path to minimize observable side-effects.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_004_ZERO_REGISTER_WRITE_PROTECTION",
+        "chunk_id": "chunk_004",
+        "original_rare_region": {
+          "rare_region_type": "ZERO_REGISTER_WRITE_PROTECTION",
+          "code_snippet": "always @(posedge clk) begin\n    if (rd_we && (rd != 5'd0)) regs[rd] <= rd_wdata;\n    regs[0] <= 32'b0;\nend",
+          "activation_trigger": "Occurs when a write to the register file is attempted; specifically, the protection ensures that register x0 is never modified, which happens rarely since x0 writes are usually ignored by software.",
+          "confidence_score": 0.9,
+          "description": "Ensures that the zero register (x0) always reads as zero, a rare enforced hardware invariant in RISC-V architectures."
+        },
+        "code_context": [
+          "// RARE REGION: always @(posedge clk) begin\n    if (rd_we && (rd != 5'd0)) regs[rd] <= rd_wdata;\n    regs[0] <= 32'b0;\nend"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT2_Leakage",
+          "rationale": "The x0 write-protection is a tiny, well-known hardware invariant (x0 must always read as zero). Modifying that invariant only under extremely rare conditions provides an attacker a stealthy, software-visible sink to encode or leak data: software (or microcode) and many instruction sequences implicitly rely on x0 being zero, so occasional controlled deviations can be observed by software or by measuring downstream microarchitectural effects. Because the protection is exercised rarely (writes to x0 are normally ignored) and verification suites seldom assert x0\u2019s immutability under adversarial triggers, a leakage trojan that occasionally allows or drives non-zero values into regs[0] can remain dormant during testing yet leak bits in the field.",
+          "attack_method": "Add a tiny conditional datapath that permits writing to regs[0] only when a conjunction of rare triggers is met (example triggers: a matched LFSR seed, a long counter overflow, a specific sequence of instruction opcodes seen on the bus, or an external pin pattern). When triggered, the trojan either:\n  1) directly writes chosen bits (or secret-sampled bits) into regs[0] for one or a few cycles so that subsequent instructions reading x0 obtain attacker-controlled values, or\n  2) toggles low-order bits of regs[0] to encode exfiltrated bits across many rare events.\nExfiltration channels: software that periodically reads x0 (or uses x0 in arithmetic/branch logic) will observe non-zero values and can reconstruct leaked bits; alternately, changes to x0 can modify microarchitectural timing/side-effects (e.g., affecting immediate operand paths or bypass/forwarding behavior) that are visible via timing/power/EM measurements. The implant is limited to the single write-protection path and gated by rare triggers to avoid detection in normal verification.",
+          "stealth_level": "Very High",
+          "damage_potential": "High",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_008_ALUOP_SPECIAL_CASES",
+        "chunk_id": "chunk_008",
+        "original_rare_region": {
+          "rare_region_type": "ALUOP_SPECIAL_CASES",
+          "code_snippet": "case ({funct7[5],funct3})\n    4'b0000: r_aluop=4'h0;\n    4'b1000: r_aluop=4'h1;\n    4'b0001: r_aluop=4'h2;\n    4'b0010: r_aluop=4'h3;\n    4'b0011: r_aluop=4'h4;\n    4'b0100: r_aluop=4'h5;\n    4'b0101: r_aluop=4'h6;\n    4'b1101: r_aluop=4'h7;\n    4'b0110: r_aluop=4'h8;\n    4'b0111: r_aluop=4'h9;\n    default: r_aluop=4'h0;\nendcase",
+          "activation_trigger": "Triggered only for R-type instructions with specific funct3/funct7 combinations, which are less frequent in typical workloads.",
+          "confidence_score": 0.85,
+          "description": "Determines the ALU operation for rare or specific R-type instructions based on funct3 and funct7 encoding."
+        },
+        "code_context": [
+          "// RARE REGION: case ({funct7[5],funct3})\n    4'b0000: r_aluop=4'h0;\n    4'b1000: r_aluop=4'h1;\n    4'b0001: r_aluop=4'h2;\n    4'b0010: r_aluop=4'h3;\n    4'b0011: r_aluop=4'h4;\n    4'b0100: r_aluop=4'h5;\n    4'b0101: r_aluop=4'h6;\n    4'b1101: r_aluop=4'h7;\n    4'b0110: r_aluop=4'h8;\n    4'b0111: r_aluop=4'h9;\n    default: r_aluop=4'h0;\nendcase"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "This ALU-op decoding table is the choke-point that maps rare funct7/funct3 encodings to specific ALU behaviors. Many of the listed encodings correspond to less-common R-type operations (shifts, rotates, special arithmetic) that are exercised unevenly in verification suites. A small, targeted modification that only affects those rare encodings can silently change the semantics of specific instructions that are used in security-sensitive code paths (permission checks, pointer arithmetic, return-address mangling, or crypto pre/post-processing). Because these cases are infrequent, the modification is unlikely to be activated in standard tests yet can deterministically subvert control- or data-integrity in the field \u2014 a pattern fitting privilege-escalation Trojans.",
+          "attack_method": "Conceptual (non-actionable): the trojan conditionally remaps one or more rare ALU operations to an alternate operation only when a very-low-probability trigger condition is met. When the trigger and the specific funct7/funct3 pattern coincide, the decoded ALU operation becomes a different operator (for example, turning a compare/subtract used for an access check into a no-op or an add), or it injects subtle bit flips into the ALU result for those instruction encodings. The corrupted result then propagates into subsequent control decisions or into registers used by privilege checks, enabling skips or redirections to attacker-chosen code paths. The trojan is gated to activate almost never under typical verification, limiting observable functional differences during testing while enabling deterministic privilege compromise when the rare combination occurs in deployment.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_008_ALUOP_IMM_SPECIAL_CASES",
+        "chunk_id": "chunk_008",
+        "original_rare_region": {
+          "rare_region_type": "ALUOP_IMM_SPECIAL_CASES",
+          "code_snippet": "case (funct3)\n    3'b000: r_aluop=4'h0;\n    3'b010: r_aluop=4'h3;\n    3'b011: r_aluop=4'h4;\n    3'b100: r_aluop=4'h5;\n    3'b110: r_aluop=4'h8;\n    3'b111: r_aluop=4'h9;\n    3'b001: r_aluop=4'h2;\n    3'b101: r_aluop=(funct7[5]?4'h7:4'h6);\n    default: r_aluop=4'h0;\nendcase",
+          "activation_trigger": "Triggered only for I-type ALU instructions with specific funct3 (and funct7 for shift-right), which are uncommon compared to standard ALU operations.",
+          "confidence_score": 0.85,
+          "description": "Determines the ALU operation for rare I-type instructions, including shift-right variants, based on funct3 and funct7 encoding."
+        },
+        "code_context": [
+          "// RARE REGION: case (funct3)\n    3'b000: r_aluop=4'h0;\n    3'b010: r_aluop=4'h3;\n    3'b011: r_aluop=4'h4;\n    3'b100: r_aluop=4'h5;\n    3'b110: r_aluop=4'h8;\n    3'b111: r_aluop=4'h9;\n    3'b001: r_aluop=4'h2;\n    3'b101: r_aluop=(funct7[5]?4'h7:4'h6);\n    default: r_aluop=4'h0;\nendcase"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The I-type ALU-op decoding for uncommon funct3/funct7 combinations is a narrow, infrequently exercised decision point that directly determines instruction semantics (e.g., shifts, compares, sign/zero variants). Subtly changing the decoded operation for those rare encodings can deterministically alter the outcome of security-sensitive computations (access checks, pointer arithmetic, return-address mangling, crypto pre/post steps) while leaving the vast majority of instruction flows unchanged. Because these encodings are exercised unevenly in verification suites, a trojan targeting this decoding table can remain dormant during tests and activate in the field when the rare instruction patterns occur, making privilege-impacting manipulations viable and stealthy.",
+          "attack_method": "Conceptual (non-actionable): introduce a conditionally-enabled modification to the ALU-op selection that only affects the uncommon funct3/funct7 cases and only when an additional, very-rare trigger is present. When both the rare opcode pattern and the trigger coincide, the unit produces a different ALU semantic (for example, converting a compare/subtract used for a guard into a no-op or an add, or injecting subtle bit perturbations into results). The altered result then changes subsequent control-flow or authorization checks so that privileged operations proceed or sensitive checks are bypassed. The trigger is designed to be uncommon (driven by a long-period event, a rarely-seen instruction sequence, or a condition tied to field-only behavior) so verification suites almost never activate the modification.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_012_BRANCH_CONDITIONS",
+        "chunk_id": "chunk_012",
+        "original_rare_region": {
+          "rare_region_type": "BRANCH_CONDITIONS",
+          "code_snippet": "always @(*) begin\n    case (funct3)\n        3'b000: t = (rs1 == rs2);\n        3'b001: t = (rs1 != rs2);\n        3'b100: t = ($signed(rs1) < $signed(rs2));\n        3'b101: t = !($signed(rs1) < $signed(rs2));\n        3'b110: t = (rs1 < rs2);\n        3'b111: t = !(rs1 < rs2);\n        default: t = 1'b0;\n    endcase\nend",
+          "activation_trigger": "Occurs only when branch instructions are evaluated, which is less frequent compared to sequential instruction execution.",
+          "confidence_score": 0.9,
+          "description": "Evaluates rare branch conditions based on funct3 and operand values to determine whether a branch is taken."
+        },
+        "code_context": [
+          "// RARE REGION: always @(*) begin\n    case (funct3)\n        3'b000: t = (rs1 == rs2);\n        3'b001: t = (rs1 != rs2);\n        3'b100: t = ($signed(rs1) < $signed(rs2));\n        3'b101: t = !($signed(rs1) < $signed(rs2));\n        3'b110: t = (rs1 < rs2);\n        3'b111: t = !(rs1 < rs2);\n        default: t = 1'b0;\n    endcase\nend"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "Branch-evaluation is a direct control-flow decision point: flipping a branch outcome (or selectively forcing it true/false) can skip security checks, bypass authorization code, or redirect execution to attacker-controlled sequences. Branches are less frequently exercised in many test suites and the decision logic here is compact and localized, so a tiny conditional modification that only affects selected funct3 cases or specific operand patterns can remain dormant during verification yet reliably subvert program logic in the field. This makes privilege-escalation Trojans the best fit for this region.",
+          "attack_method": "Insert a small conditional override in the branch-condition logic that only triggers when (a) the opcode/funct3 matches a targeted branch type (e.g., BEQ/BNE/BGE/BLT) and (b) a very-low-probability secondary trigger is true (examples: an LFSR/counter match, a particular bit pattern in rs1/rs2, or a long-period sequence detector). When both conditions hold, force the boolean result `t` to the attacker-desired value (e.g., force `t = 1` to make the branch taken, or `t = 0` to prevent it). Practical payloads:\n  \u2022 Skip authentication/permission checks by forcing branch guards to pass, leading execution into privileged code paths.\n  \u2022 Create deterministic control-flow redirection by making an otherwise-false branch true only when a secret pattern is present (e.g., a secret key comparison), enabling targeted activation.\n  \u2022 Combine with a tiny counter to activate only after N occurrences so the behavior appears after field deployment. The implant uses only a few gates (comparator/XNOR, small LFSR or counter, and a mux) and is gated tightly to minimize observable deviations during standard tests.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_014_FORWARDING_LOGIC",
+        "chunk_id": "chunk_014",
+        "original_rare_region": {
+          "rare_region_type": "FORWARDING_LOGIC",
+          "code_snippet": "always @(*) begin\n\n    a=2'd0; b=2'd0;\n\n    if (exmem_regwrite && (exmem_rd!=5'd0) && (exmem_rd==idex_rs1)) a=2'd1;\n    if (exmem_regwrite && (exmem_rd!=5'd0) && (exmem_rd==idex_rs2)) b=2'd1;\n\n    if (memwb_regwrite && (memwb_rd!=5'd0) && (memwb_rd==idex_rs1) && !(exmem_regwrite && (exmem_rd!=5'd0) && (exmem_rd==idex_rs1))) a=2'd2;\n    if (memwb_regwrite && (memwb_rd!=5'd0) && (memwb_rd==idex_rs2) && !(exmem_regwrite && (exmem_rd!=5'd0) && (exmem_rd==idex_rs2))) b=2'd2;\nend",
+          "activation_trigger": "Triggered only when data forwarding is required due to dependencies between EX/MEM and ID/EX stage registers, which happens infrequently under typical instruction sequences.",
+          "confidence_score": 0.9,
+          "description": "Handles rare data forwarding cases to resolve hazards when EX stage operands depend on results from later pipeline stages."
+        },
+        "code_context": [
+          "    output [1:0] fwd_b",
+          ");",
+          "    reg [1:0] a,b;",
+          "    always @(*) begin",
+          "",
+          "        a=2'd0; b=2'd0;",
+          "",
+          "        if (exmem_regwrite && (exmem_rd!=5'd0) && (exmem_rd==idex_rs1)) a=2'd1;  // <-- RARE REGION",
+          "        if (exmem_regwrite && (exmem_rd!=5'd0) && (exmem_rd==idex_rs2)) b=2'd1;  // <-- RARE REGION",
+          "",
+          "        if (memwb_regwrite && (memwb_rd!=5'd0) && (memwb_rd==idex_rs1) && !(exmem_regwrite && (exmem_rd!=5'd0) && (exmem_rd==idex_rs1))) a=2'd2;  // <-- RARE REGION",
+          "        if (memwb_regwrite && (memwb_rd!=5'd0) && (memwb_rd==idex_rs2) && !(exmem_regwrite && (exmem_rd!=5'd0) && (exmem_rd==idex_rs2))) b=2'd2;  // <-- RARE REGION",
+          "    end",
+          "    assign fwd_a=a; assign fwd_b=b;",
+          "endmodule"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT2_Leakage",
+          "rationale": "The forwarding decision is a narrow control point that changes which pipeline value (EX/MEM or MEM/WB) is used as an operand. Because forwarding events are infrequent and exercised unevenly in verification, an attacker can covertly encode bits by nudging the forwarding selection in rare, data-dependent ways. This lets secrets that flow through recently-produced register values (loaded keys, pointers, return addresses) be encoded into microarchitectural observables (timing, contention, or subtle data differences) without altering the main functional datapath most of the time. The rarity of forwarding events and the small, local nature of the change make such a Trojan highly stealthy.",
+          "attack_method": "Implant a tiny conditional controller that can flip the forwarding selection (a / b variable) when a conjunction of rare triggers is satisfied (examples: an LFSR/counter match, a particular bit pattern in the forwarded data, or a sequence detector). Two realistic covert-channel strategies:\n  1) Timing/Selection Channel: On a forwarding opportunity, choose between EXMEM (a=1) and MEMWB (a=2) based on a secret bit (or sampled bit of the forwarded value). The two sources may deliver the operand with different timing/latency characteristics (e.g., one is ready earlier, the other later) or induce different microarchitectural stalls; an external observer or careful software micro-benchmark can infer the bit by measuring execution latency over many rare forwarding events.\n  2) Data/Bit-Flip Channel: When selecting the memwb source, slightly bias which sub-field is exposed by selecting memwb_alu_y vs memwb_mem_rdata (or by flipping a low-order bit in the chosen forwarded value) to encode a bit. Over many forwarding occurrences this leaks secret bits to software that later reads the register or via side channels (timing, power, EM).\nThe Trojan is kept minimal \u2014 a comparator/XNOR, a tiny LFSR/counter, and a mux-control AND gate \u2014 and only toggles forwarding during narrowly-defined conditions so standard tests (which rarely drive these exact forwarding patterns and triggers) won\u2019t activate it. Bits are exfiltrated slowly across many forwarding events to avoid detection.",
+          "stealth_level": "Very High",
+          "damage_potential": "High",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_016_STORE_ALIGNMENT_LOGIC",
+        "chunk_id": "chunk_016",
+        "original_rare_region": {
+          "rare_region_type": "STORE_ALIGNMENT_LOGIC",
+          "code_snippet": "always @(*) begin\n        case (funct3)\n            3'b000: begin\n                case (addr)\n                    2'b00: begin r_be=4'b0001; r_wdata={24'b0, rs2[7:0]}; end\n                    2'b01: begin r_be=4'b0010; r_wdata={16'b0, rs2[7:0], 8'b0}; end\n                    2'b10: begin r_be=4'b0100; r_wdata={8'b0, rs2[7:0], 16'b0}; end\n                    default:begin r_be=4'b1000; r_wdata={rs2[7:0], 24'b0}; end\n                endcase\n            end\n            3'b001: begin\n                if (addr[1]==1'b0) begin\n                    r_be = 4'b0011; r_wdata = {16'b0, rs2[15:0]};\n                end else begin\n                    r_be = 4'b1100; r_wdata = {rs2[15:0], 16'b0};\n                end\n            end\n            default: begin\n                r_be   = 4'b1111; r_wdata = rs2;\n            end\n        endcase\n    end",
+          "activation_trigger": "Occurs during store instructions when address alignment requires special byte enable and data shifting, which is infrequent compared to normal aligned accesses.",
+          "confidence_score": 0.9,
+          "description": "Handles rare byte- and half-word store alignment cases based on address and funct3, ensuring correct data placement in memory."
+        },
+        "code_context": [
+          "    reg [3:0]  r_be;",
+          "    reg [31:0] r_wdata;",
+          "    always @(*) begin",
+          "        case (funct3)",
+          "            3'b000: begin",
+          "                case (addr)",
+          "                    2'b00: begin r_be=4'b0001; r_wdata={24'b0, rs2[7:0]}; end",
+          "                    2'b01: begin r_be=4'b0010; r_wdata={16'b0, rs2[7:0], 8'b0}; end  // <-- RARE REGION",
+          "                    2'b10: begin r_be=4'b0100; r_wdata={8'b0, rs2[7:0], 16'b0}; end  // <-- RARE REGION",
+          "                    default:begin r_be=4'b1000; r_wdata={rs2[7:0], 24'b0}; end",
+          "                endcase",
+          "            end",
+          "            3'b001: begin",
+          "                if (addr[1]==1'b0) begin",
+          "                    r_be = 4'b0011; r_wdata = {16'b0, rs2[15:0]};",
+          "                end else begin"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The store-alignment path is a precise, seldom-exercised datapath that decides which byte-lanes are enabled and how store-data is shifted into those lanes. Because unaligned or sub-word stores are less frequent in many workloads and verification suites, a tiny conditional modification here can selectively corrupt a single byte or half-word of memory at the moment it is written. That single-byte corruption can be leveraged to overwrite low-order pointer bits, link/return words, or control flags in data structures used by privilege-checking code \u2014 producing deterministic privilege escalation while leaving the vast majority of memory traffic untouched and undetected during standard tests.",
+          "attack_method": "Conceptual (high-level): add a minimal conditional override to the store-alignment logic so that when a targeted store event occurs (e.g., funct3==store-byte/half conditions and addr[1:0] matches) AND a very-low-probability trigger is satisfied (examples: a long-period counter/LFSR match, a specific store address range, or a particular pattern in the store data), the trojan substitutes attacker-chosen byte-enable and shifted data values instead of the legitimate r_be/r_wdata. By targeting stores that write into security-critical data structures (stack frames, GOT/PLT entries, saved return addresses, ACL entries) or boot-time configuration regions, the trojan can induce a one-byte or two-byte corruption that later causes control-flow to jump to attacker-controlled code or causes privilege checks to be bypassed. The modification is tightly gated and limited to rare alignment cases so normal functional tests (which rarely generate the exact address/trigger combination) will not reveal the behavior.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_018_LOAD_ALIGNMENT_LOGIC",
+        "chunk_id": "chunk_018",
+        "original_rare_region": {
+          "rare_region_type": "LOAD_ALIGNMENT_LOGIC",
+          "code_snippet": "always @(*) begin\n        case (funct3)\n            3'b000: begin\n                case (addr)\n                    2'b00: r = {{24{byte0[7]}}, byte0};\n                    2'b01: r = {{24{byte1[7]}}, byte1};\n                    2'b10: r = {{24{byte2[7]}}, byte2};\n                    default: r = {{24{byte3[7]}}, byte3};\n                endcase\n            end\n            3'b100: begin\n                case (addr)\n                    2'b00: r = {24'b0, byte0};\n                    2'b01: r = {24'b0, byte1};\n                    2'b10: r = {24'b0, byte2};\n                    default: r = {24'b0, byte3};\n                endcase\n            end\n            3'b001: begin\n                if (addr[1]==1'b0) r = {{16{half_lo[15]}}, half_lo};\n                else               r = {{16{half_hi[15]}}, half_hi};\n            end\n            3'b101: begin\n                if (addr[1]==1'b0) r = {16'b0, half_lo};\n                else               r = {16'b0, half_hi};\n            end\n            default: begin\n                r = rdata;\n            end\n        endcase\n    end",
+          "activation_trigger": "Occurs during load instructions that access byte or half-word subfields with non-aligned addresses, which is less common compared to aligned word accesses.",
+          "confidence_score": 0.9,
+          "description": "Handles rare byte- and half-word load alignment and sign/zero extension based on address and funct3."
+        },
+        "code_context": [
+          "// RARE REGION: always @(*) begin\n        case (funct3)\n            3'b000: begin\n                case (addr)\n                    2'b00: r = {{24{byte0[7]}}, byte0};\n                    2'b01: r = {{24{byte1[7]}}, byte1};\n                    2'b10: r = {{24{byte2[7]}}, byte2};\n                    default: r = {{24{byte3[7]}}, byte3};\n                endcase\n            end\n            3'b100: begin\n                case (addr)\n                    2'b00: r = {24'b0, byte0};\n                    2'b01: r = {24'b0, byte1};\n                    2'b10: r = {24'b0, byte2};\n                    default: r = {24'b0, byte3};\n                endcase\n            end\n            3'b001: begin\n                if (addr[1]==1'b0) r = {{16{half_lo[15]}}, half_lo};\n                else               r = {{16{half_hi[15]}}, half_hi};\n            end\n            3'b101: begin\n                if (addr[1]==1'b0) r = {16'b0, half_lo};\n                else               r = {16'b0, half_hi};\n            end\n            default: begin\n                r = rdata;\n            end\n        endcase\n    end"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT2_Leakage",
+          "rationale": "The load-alignment logic touches the exact bits that get sign- or zero-extended into software-visible registers for byte/half-word accesses \u2014 often used when reading packed data, key material, or little-endian fields. Unaligned and sub-word loads are less common in many verification benches, so a tiny implant that samples or conditionally tampers with selected bytes during these rare load cases can covertly exfiltrate secret bits or subtly alter values consumed by higher-level code. Because the logic is localized and only exercised for specific funct3/address combinations, it is a low-observable place to hide a leakage channel.",
+          "attack_method": "Add a minimal, trigger-gated sampling and encoding path in the load-alignment case statements: when a targeted load case (e.g., byte at addr[1:0]==2'b01 or half-word with addr[1]==1) occurs AND a very-low-probability trigger is true (examples: LFSR/counter match, particular pattern in rdata, or a long sequence detector), the trojan instead of returning the true byte/halfword will:\n  1) Route one or more selected bits into the sign/zero-extended result (flip a low-order bit or set a bit to the sampled secret). Over many rare loads, these bits encode sensitive data.\n  2) Or, produce a tiny, data-dependent timing difference by inserting a 1-cycle combinational path extension only for certain sampled-bit=1 cases; attackers recover bits by measuring execution time or power/EM across many loads.\n  3) Or, toggle an otherwise-idle internal line (debug/test handshake or spare wire) coincident with the sampled bit to create an external side-channel.\nThe implant is implemented with a few gates (mux, small comparator, LFSR/counter) and only activates for rare load alignment branches and the added trigger, making functional tests unlikely to exercise it. Exfiltration is done slowly across many load events to avoid detection.",
+          "stealth_level": "Very High",
+          "damage_potential": "High",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_020_MEMORY_INITIALIZATION",
+        "chunk_id": "chunk_020",
+        "original_rare_region": {
+          "rare_region_type": "MEMORY_INITIALIZATION",
+          "code_snippet": "if (rst) begin\n            imem_rvalid <= 1'b0; dmem_rvalid <= 1'b0;\n\n            for (k=0; k<MEM_BYTES; k=k+1) mem[k] <= 8'h00;\n        end",
+          "activation_trigger": "Occurs only during system reset (rst is high), which happens infrequently compared to normal memory access cycles.",
+          "confidence_score": 0.95,
+          "description": "Initializes the entire memory array to zero on reset; rare because resets are infrequent during normal operation."
+        },
+        "code_context": [
+          "// RARE REGION: if (rst) begin\n            imem_rvalid <= 1'b0; dmem_rvalid <= 1'b0;\n\n            for (k=0; k<MEM_BYTES; k=k+1) mem[k] <= 8'h00;\n        end"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "The memory-initialization code runs only during reset and has authoritative control over large memory contents and (indirectly) boot behavior. A malicious change here can deterministically shape the system's initial software view (boot vectors, firmware image placement, configuration words) before any higher-level software or checks run. Because resets are infrequent and many verification flows do not exercise exhaustive memory-init variants, implants that alter initialization can remain dormant through standard testing yet guarantee attacker control the first time the device boots in the field.",
+          "attack_method": "High-level (non-actionable): modify the reset-time initialization so that one or more memory locations are left with attacker-chosen values (instead of zero) or are seeded with a tiny bootstrap sequence. On first boot the processor fetches or executes from these modified locations (or reads attacker-chosen configuration words), enabling a persistent loader or privileged firmware to run before normal software initialization. The description intentionally omits implementation-level details and gating mechanisms; it focuses on the plausible effect and target (boot-time control) rather than on step-by-step how to build such an implant.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      },
+      {
+        "region_id": "chunk_020_PARTIAL_WRITE_HANDLING",
+        "chunk_id": "chunk_020",
+        "original_rare_region": {
+          "rare_region_type": "PARTIAL_WRITE_HANDLING",
+          "code_snippet": "if (dmem_req && dmem_we) begin\n                if (dmem_be[0]) mem[daddr+0] <= dmem_wdata[7:0];\n                if (dmem_be[1]) mem[daddr+1] <= dmem_wdata[15:8];\n                if (dmem_be[2]) mem[daddr+2] <= dmem_wdata[23:16];\n                if (dmem_be[3]) mem[daddr+3] <= dmem_wdata[31:24];\n            end",
+          "activation_trigger": "Triggered when a data memory write occurs (dmem_req && dmem_we) with specific byte enables; partial writes are less frequent than full word writes.",
+          "confidence_score": 0.9,
+          "description": "Handles selective byte-wise writing to memory, rarely activated when only some bytes need updating."
+        },
+        "code_context": [
+          "// RARE REGION: if (dmem_req && dmem_we) begin\n                if (dmem_be[0]) mem[daddr+0] <= dmem_wdata[7:0];\n                if (dmem_be[1]) mem[daddr+1] <= dmem_wdata[15:8];\n                if (dmem_be[2]) mem[daddr+2] <= dmem_wdata[23:16];\n                if (dmem_be[3]) mem[daddr+3] <= dmem_wdata[31:24];\n            end"
+        ],
+        "best_ht_match": {
+          "trojan_type": "HT1_Privilege",
+          "rationale": "Partial-byte write handling is a narrow, infrequently exercised datapath that decides which bytes within a word are updated. A malicious, narrowly-scoped change here can produce one- or two-byte corruptions at precise memory offsets (for example low-order pointer or return-address bytes, ACL flags, or boot configuration fields). Because partial writes occur far less often than full-word writes in many workloads and verification suites, a trojan confined to this path can remain dormant during standard testing yet produce deterministic, security-critical memory corruptions in the field that lead to privilege escalation or persistent compromise.",
+          "attack_method": "Conceptual (non-actionable): silently alter the value written for a targeted byte-enable pattern under very rare, tightly-gated conditions so that a single byte (or a small subset of bytes) in a security-sensitive location is corrupted while other memory traffic remains correct. The corruption is chosen to produce predictable downstream effects (for example, change a low-order pointer byte or a flag in a table) that later cause control-flow to pivot to attacker-controlled or privileged code. The description intentionally avoids implementation-level details and gating mechanisms; it focuses on the plausible effect (targeted, rare partial-write corruption that enables privilege misuse) rather than construction steps.",
+          "stealth_level": "Very High",
+          "damage_potential": "Critical",
+          "detection_difficulty": "Extremely Hard"
+        },
+        "no_suitable_ht": false
+      }
+    ]
+  }
+}

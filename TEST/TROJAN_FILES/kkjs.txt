@@ -1,0 +1,11 @@
+1 module uart_tx #(
+2     parameter CLK_FREQ = 50_000_000,
+3     parameter BAUD_RATE = 115200
+4 )(
+5     input  logic       clk,
+6     input  logic       rst_n,
+7     input  logic [7:0] tx_data,
+8     input  logic       tx_valid,
+9     output logic       tx_ready,
+10     output logic       tx_out
+11 );

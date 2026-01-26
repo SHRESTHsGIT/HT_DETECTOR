@@ -1,0 +1,113 @@
+`timescale 1ns/1ps
+module uart_tx #(
+    parameter int CLK_FREQ  = 50_000_000,
+    parameter int BAUD_RATE = 115200
+)(
+    input  logic       clk,
+    input  logic       rst_n,
+    input  logic [7:0] tx_data,
+    input  logic       tx_valid,
+    output logic       tx_ready,
+    output logic       tx_out
+);
+
+    localparam int DIVISOR = CLK_FREQ / BAUD_RATE;
+
+    typedef enum logic [2:0] { IDLE, START_BIT, DATA_BITS, STOP_BIT } state_t;
+    state_t state, next_state;
+
+    logic [7:0] shift_reg;
+    logic [2:0] bit_counter;
+
+    logic [31:0] baud_counter;
+    logic        baud_tick;
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            baud_counter <= 32'd0;
+            baud_tick    <= 1'b0;
+        end else begin
+            if (baud_counter == DIVISOR - 1) begin
+                baud_counter <= 32'd0;
+                baud_tick    <= 1'b1;
+            end else begin
+                baud_counter <= baud_counter + 32'd1;
+                baud_tick    <= 1'b0;
+            end
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
+
+    always_comb begin
+        next_state = state;
+        case (state)
+            IDLE: begin
+                if (tx_valid) next_state = START_BIT;
+            end
+            START_BIT: begin
+                if (baud_tick) next_state = DATA_BITS;
+            end
+            DATA_BITS: begin
+                if (baud_tick && bit_counter == 3'd7) next_state = STOP_BIT;
+            end
+            STOP_BIT: begin
+                if (baud_tick) next_state = IDLE;
+            end
+            default: next_state = IDLE;
+        endcase
+    end
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            shift_reg <= 8'd0;
+            bit_counter <= 3'd0;
+            tx_out <= 1'b1;
+            tx_ready <= 1'b1;
+        end else begin
+            case (state)
+                IDLE: begin
+                    tx_out <= 1'b1;
+                    tx_ready <= 1'b1;
+                    if (tx_valid) begin
+                        shift_reg <= tx_data;
+                        tx_ready <= 1'b0;
+                    end
+                end
+                START_BIT: begin
+                    tx_out <= 1'b0;
+                    bit_counter <= 3'd0;
+                end
+                DATA_BITS: begin
+                    if (baud_tick) begin
+                        tx_out <= shift_reg[0];
+                        shift_reg <= {1'b0, shift_reg[7:1]};
+                        bit_counter <= bit_counter + 3'd1;
+                    end
+                end
+                STOP_BIT: begin
+                    tx_out <= 1'b1;
+                end
+                default: begin
+                    tx_out <= 1'b1;
+                    tx_ready <= 1'b1;
+                end
+            endcase
+        end
+    end
+
+`ifdef FORMAL
+    assert property (@(posedge clk) disable iff (!rst_n)
+        (state == IDLE || state == STOP_BIT) |-> tx_out == 1'b1
+    );
+    assert property (@(posedge clk) disable iff (!rst_n)
+        (state != IDLE) |-> tx_ready == 1'b0
+    );
+`endif
+
+endmodule

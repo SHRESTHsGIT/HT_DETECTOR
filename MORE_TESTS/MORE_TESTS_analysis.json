@@ -1,0 +1,70 @@
+{
+  "folder": "MORE_TESTS",
+  "full_path": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/MORE_TESTS",
+  "timestamp": "2025-10-10T17:02:12.939043",
+  "total_files": 5,
+  "files": [
+    {
+      "file": "complex_pipeline_processor.v",
+      "relative_path": "complex_pipeline_processor.v",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9939418435096741,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5014988339971751
+    },
+    {
+      "file": "complex_pipeline_processor_with_HT002.v",
+      "relative_path": "complex_pipeline_processor_with_HT002.v",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9939418435096741,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5014988339971751
+    },
+    {
+      "file": "complex_pipeline_processor_with_HT001.v",
+      "relative_path": "complex_pipeline_processor_with_HT001.v",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9939418435096741,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5014988339971751
+    },
+    {
+      "file": "complex_pipeline_processor_with_HT003.v",
+      "relative_path": "complex_pipeline_processor_with_HT003.v",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9939418435096741,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5014988339971751
+    },
+    {
+      "file": "complex_pipeline_processor_with_HT004.v",
+      "relative_path": "complex_pipeline_processor_with_HT004.v",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9939418435096741,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5014988339971751
+    }
+  ],
+  "summary": {
+    "total_analyzed": 5,
+    "trojans_detected": 5,
+    "clean_designs": 0,
+    "errors": 0,
+    "avg_trojan_probability": 0.5014988339971751
+  }
+}

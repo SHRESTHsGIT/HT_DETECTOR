@@ -1,0 +1,81 @@
+{
+  "folder": "SRAM",
+  "full_path": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/TEST/TROJAN_FILES/GHOST_CODES/SRAM/SRAM",
+  "timestamp": "2025-10-10T07:06:20.307477",
+  "total_files": 6,
+  "files": [
+    {
+      "file": "sram_HT3_gpt-4_A1_GHOST.v",
+      "relative_path": "sram_HT3_gpt-4_A1_GHOST.v",
+      "dfg_confidence": 0.74331134557724,
+      "dfg_prediction": "CLEAN",
+      "ast_confidence": 0.8930467963218689,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.8930467963218689,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.18182094022631645
+    },
+    {
+      "file": "sram_HT1_gpt-4_A1_GHOST.v",
+      "relative_path": "sram_HT1_gpt-4_A1_GHOST.v",
+      "dfg_confidence": 0.7446660399436951,
+      "dfg_prediction": "CLEAN",
+      "ast_confidence": 0.8929691910743713,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.8929691910743713,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.1811823770403862
+    },
+    {
+      "file": "sram_HT2_gpt-4_A1_GHOST.v",
+      "relative_path": "sram_HT2_gpt-4_A1_GHOST.v",
+      "dfg_confidence": 0.743259608745575,
+      "dfg_prediction": "CLEAN",
+      "ast_confidence": 0.8930290937423706,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.8930290937423706,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.18185562267899513
+    },
+    {
+      "file": "SRAM_with_HT001.sv",
+      "relative_path": "SRAM_with_HT001.sv",
+      "dfg_confidence": 0.7268908023834229,
+      "dfg_prediction": "CLEAN",
+      "ast_confidence": 0.893060564994812,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.893060564994812,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.19002433121204376
+    },
+    {
+      "file": "sram.v",
+      "relative_path": "sram.v",
+      "dfg_confidence": 0.7447250485420227,
+      "dfg_prediction": "CLEAN",
+      "ast_confidence": 0.9066601395606995,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9066601395606995,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.17430739477276802
+    },
+    {
+      "file": "SRAM_with_HT002.sv",
+      "relative_path": "SRAM_with_HT002.sv",
+      "dfg_confidence": 0.7451950907707214,
+      "dfg_prediction": "CLEAN",
+      "ast_confidence": 0.8900409936904907,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.8900409936904907,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.1823819763958454
+    }
+  ],
+  "summary": {
+    "total_analyzed": 6,
+    "trojans_detected": 0,
+    "clean_designs": 6,
+    "errors": 0,
+    "avg_trojan_probability": 0.18192877372105917
+  }
+}

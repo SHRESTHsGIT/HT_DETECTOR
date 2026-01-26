@@ -1,0 +1,441 @@
+{
+  "metadata": {
+    "source_chunks_file": "/kaggle/working/aes_128_chunks.json",
+    "total_modules": 3,
+    "modules_extracted": 3
+  },
+  "module_signals": {
+    "chunk_001": {
+      "module_id": "chunk_001",
+      "module_name": "unknown",
+      "chunks": [
+        "chunk_001"
+      ],
+      "ports": [],
+      "module_signals": [],
+      "parameters": [],
+      "enums": [],
+      "state_signals": []
+    },
+    "chunk_002": {
+      "module_id": "chunk_002",
+      "module_name": "aes_128",
+      "chunks": [
+        "chunk_002"
+      ],
+      "ports": [
+        {
+          "name": "clk",
+          "direction": "input",
+          "type": "logic",
+          "width": "",
+          "declared_at_line": 2
+        },
+        {
+          "name": "state",
+          "direction": "input",
+          "type": "logic",
+          "width": "[127:0]",
+          "declared_at_line": 3
+        },
+        {
+          "name": "key",
+          "direction": "input",
+          "type": "logic",
+          "width": "[127:0]",
+          "declared_at_line": 3
+        },
+        {
+          "name": "out",
+          "direction": "output",
+          "type": "logic",
+          "width": "[127:0]",
+          "declared_at_line": 4
+        }
+      ],
+      "module_signals": [
+        {
+          "name": "s0",
+          "type": "reg",
+          "width": "[127:0]",
+          "declared_at_line": 5,
+          "scope": "module"
+        },
+        {
+          "name": "k0",
+          "type": "reg",
+          "width": "[127:0]",
+          "declared_at_line": 5,
+          "scope": "module"
+        },
+        {
+          "name": "s1",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 6,
+          "scope": "module"
+        },
+        {
+          "name": "s2",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 6,
+          "scope": "module"
+        },
+        {
+          "name": "s3",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 6,
+          "scope": "module"
+        },
+        {
+          "name": "s4",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 6,
+          "scope": "module"
+        },
+        {
+          "name": "s5",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 6,
+          "scope": "module"
+        },
+        {
+          "name": "s6",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 6,
+          "scope": "module"
+        },
+        {
+          "name": "s7",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 6,
+          "scope": "module"
+        },
+        {
+          "name": "s8",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 6,
+          "scope": "module"
+        },
+        {
+          "name": "s9",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 6,
+          "scope": "module"
+        },
+        {
+          "name": "k1",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k2",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k3",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k4",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k5",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k6",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k7",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k8",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k9",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k0b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k1b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k2b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k3b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k4b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k5b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k6b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k7b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k8b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k9b",
+          "type": "wire",
+          "width": "[127:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        }
+      ],
+      "parameters": [],
+      "enums": [],
+      "state_signals": []
+    },
+    "chunk_003": {
+      "module_id": "chunk_003",
+      "module_name": "expand_key_128",
+      "chunks": [
+        "chunk_003"
+      ],
+      "ports": [
+        {
+          "name": "clk",
+          "direction": "input",
+          "type": "logic",
+          "width": "",
+          "declared_at_line": 2
+        },
+        {
+          "name": "in",
+          "direction": "input",
+          "type": "logic",
+          "width": "[127:0]",
+          "declared_at_line": 3
+        },
+        {
+          "name": "rcon",
+          "direction": "input",
+          "type": "logic",
+          "width": "[7:0]",
+          "declared_at_line": 4
+        },
+        {
+          "name": "out_1",
+          "direction": "output",
+          "type": "reg",
+          "width": "[127:0]",
+          "declared_at_line": 5
+        },
+        {
+          "name": "out_2",
+          "direction": "output",
+          "type": "logic",
+          "width": "[127:0]",
+          "declared_at_line": 6
+        }
+      ],
+      "module_signals": [
+        {
+          "name": "k0",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k1",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k2",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "k3",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 7,
+          "scope": "module"
+        },
+        {
+          "name": "v0",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "v1",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "v2",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "v3",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 8,
+          "scope": "module"
+        },
+        {
+          "name": "k0a",
+          "type": "reg",
+          "width": "[31:0]",
+          "declared_at_line": 9,
+          "scope": "module"
+        },
+        {
+          "name": "k1a",
+          "type": "reg",
+          "width": "[31:0]",
+          "declared_at_line": 9,
+          "scope": "module"
+        },
+        {
+          "name": "k2a",
+          "type": "reg",
+          "width": "[31:0]",
+          "declared_at_line": 9,
+          "scope": "module"
+        },
+        {
+          "name": "k3a",
+          "type": "reg",
+          "width": "[31:0]",
+          "declared_at_line": 9,
+          "scope": "module"
+        },
+        {
+          "name": "k0b",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 10,
+          "scope": "module"
+        },
+        {
+          "name": "k1b",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 10,
+          "scope": "module"
+        },
+        {
+          "name": "k2b",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 10,
+          "scope": "module"
+        },
+        {
+          "name": "k3b",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 10,
+          "scope": "module"
+        },
+        {
+          "name": "k4a",
+          "type": "wire",
+          "width": "[31:0]",
+          "declared_at_line": 10,
+          "scope": "module"
+        }
+      ],
+      "parameters": [],
+      "enums": [],
+      "state_signals": []
+    }
+  }
+}

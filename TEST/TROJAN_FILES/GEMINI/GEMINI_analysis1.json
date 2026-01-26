@@ -1,0 +1,59 @@
+{
+  "folder": "GEMINI",
+  "full_path": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/TEST/TROJAN_FILES/GEMINI",
+  "timestamp": "2025-10-10T08:18:42.350194",
+  "total_files": 4,
+  "files": [
+    {
+      "file": "UART-TX_with_HT004.sv",
+      "relative_path": "UART-TX_with_HT004.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9937439560890198,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5015977693255991
+    },
+    {
+      "file": "UART-TX_with_HT002.sv",
+      "relative_path": "UART-TX_with_HT002.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9937439560890198,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5015977693255991
+    },
+    {
+      "file": "UART-TX_with_HT001.sv",
+      "relative_path": "UART-TX_with_HT001.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9938530921936035,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5015432070940733
+    },
+    {
+      "file": "UART-TX_with_HT003.sv",
+      "relative_path": "UART-TX_with_HT003.sv",
+      "dfg_confidence": 0.9969395399093628,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9937439560890198,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969395399093628,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5015977693255991
+    }
+  ],
+  "summary": {
+    "total_analyzed": 4,
+    "trojans_detected": 4,
+    "clean_designs": 0,
+    "errors": 0,
+    "avg_trojan_probability": 0.5015841287677176
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "folder": "TESTER_CODE",
+  "full_path": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/TEST/TROJAN_FILES/GPT/TESTER_CODE",
+  "timestamp": "2025-10-10T07:05:17.236350",
+  "total_files": 5,
+  "files": [
+    {
+      "file": "topModule.v",
+      "relative_path": "topModule.v",
+      "dfg_confidence": 0.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": 0.661423921585083,
+      "ast_prediction": "TROJAN",
+      "ensemble_confidence": 0.661423921585083,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.3307119607925415
+    },
+    {
+      "file": "spi_master_with_HT003.sv",
+      "relative_path": "spi_master_with_HT003.sv",
+      "dfg_confidence": 0.9969391822814941,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9765198230743408,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969391822814941,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5102096572518349
+    },
+    {
+      "file": "spi_master_with_HT001.sv",
+      "relative_path": "spi_master_with_HT001.sv",
+      "dfg_confidence": 0.9969391822814941,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9765198230743408,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969391822814941,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5102096572518349
+    },
+    {
+      "file": "spi_master_with_HT002.sv",
+      "relative_path": "spi_master_with_HT002.sv",
+      "dfg_confidence": 0.9969391822814941,
+      "dfg_prediction": "TROJAN",
+      "ast_confidence": 0.9767250418663025,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9969391822814941,
+      "ensemble_prediction": "TROJAN",
+      "trojan_probability": 0.5101070431992412
+    },
+    {
+      "file": "spi_master.v",
+      "relative_path": "spi_master.v",
+      "dfg_confidence": 0.9001497626304626,
+      "dfg_prediction": "CLEAN",
+      "ast_confidence": 0.9929967522621155,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9929967522621155,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.053426764672622085
+    }
+  ],
+  "summary": {
+    "total_analyzed": 5,
+    "trojans_detected": 4,
+    "clean_designs": 1,
+    "errors": 0,
+    "avg_trojan_probability": 0.3829330166336149
+  }
+}

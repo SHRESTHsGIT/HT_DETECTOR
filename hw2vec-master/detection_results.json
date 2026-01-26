@@ -1,0 +1,27 @@
+{
+  "file": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/TEST/TROJAN_FILES/GEMINI/RISCV_with_HT001.sv",
+  "dfg_result": {
+    "file": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/TEST/TROJAN_FILES/GEMINI/RISCV_with_HT001.sv",
+    "model": "DFG",
+    "prediction": "TROJAN",
+    "confidence": 0.5379087328910828,
+    "prob_clean": 0.46209126710891724,
+    "prob_trojan": 0.5379087328910828,
+    "timestamp": "2025-10-10T03:57:33.787232"
+  },
+  "ast_result": {
+    "file": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/TEST/TROJAN_FILES/GEMINI/RISCV_with_HT001.sv",
+    "model": "AST",
+    "prediction": "TROJAN",
+    "confidence": 0.5055141448974609,
+    "prob_clean": 0.49448585510253906,
+    "prob_trojan": 0.5055141448974609,
+    "timestamp": "2025-10-10T03:57:34.494306"
+  },
+  "ensemble": {
+    "prediction": "CLEAN",
+    "confidence": 0.49448585510253906,
+    "avg_prob_trojan": 0.5217114388942719
+  },
+  "timestamp": "2025-10-10T03:57:34.494341"
+}

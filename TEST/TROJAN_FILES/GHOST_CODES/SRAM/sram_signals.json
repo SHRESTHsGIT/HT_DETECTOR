@@ -1,0 +1,125 @@
+{
+  "metadata": {
+    "source_chunks_file": "/kaggle/working/sram_chunks.json",
+    "total_modules": 2,
+    "modules_extracted": 1
+  },
+  "module_signals": {
+    "chunk_002": {
+      "module_id": "chunk_002",
+      "module_name": "SRAM_32x128_1rw",
+      "chunks": [
+        "chunk_002"
+      ],
+      "ports": [
+        {
+          "name": "clk0",
+          "direction": "input",
+          "type": "logic",
+          "width": "",
+          "declared_at_line": 15
+        },
+        {
+          "name": "csb0",
+          "direction": "input",
+          "type": "logic",
+          "width": "",
+          "declared_at_line": 16
+        },
+        {
+          "name": "web0",
+          "direction": "input",
+          "type": "logic",
+          "width": "",
+          "declared_at_line": 17
+        },
+        {
+          "name": "addr0",
+          "direction": "input",
+          "type": "logic",
+          "width": "[ADDR_WIDTH-1:0]",
+          "declared_at_line": 18
+        },
+        {
+          "name": "din0",
+          "direction": "input",
+          "type": "logic",
+          "width": "[DATA_WIDTH-1:0]",
+          "declared_at_line": 19
+        },
+        {
+          "name": "dout0",
+          "direction": "output",
+          "type": "reg",
+          "width": "[DATA_WIDTH-1:0]",
+          "declared_at_line": 20
+        }
+      ],
+      "module_signals": [
+        {
+          "name": "csb0_reg",
+          "type": "reg",
+          "width": "",
+          "declared_at_line": 22,
+          "scope": "module"
+        },
+        {
+          "name": "web0_reg",
+          "type": "reg",
+          "width": "",
+          "declared_at_line": 23,
+          "scope": "module"
+        },
+        {
+          "name": "addr0_reg",
+          "type": "reg",
+          "width": "[ADDR_WIDTH-1:0]",
+          "declared_at_line": 24,
+          "scope": "module"
+        },
+        {
+          "name": "din0_reg",
+          "type": "reg",
+          "width": "[DATA_WIDTH-1:0]",
+          "declared_at_line": 25,
+          "scope": "module"
+        },
+        {
+          "name": "mem",
+          "type": "reg",
+          "width": "[DATA_WIDTH-1:0]",
+          "declared_at_line": 27,
+          "scope": "module"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "DATA_WIDTH",
+          "type": "parameter",
+          "value": "32",
+          "declared_at_line": 10
+        },
+        {
+          "name": "ADDR_WIDTH",
+          "type": "parameter",
+          "value": "7",
+          "declared_at_line": 11
+        },
+        {
+          "name": "RAM_DEPTH",
+          "type": "parameter",
+          "value": "1 << ADDR_WIDTH",
+          "declared_at_line": 12
+        },
+        {
+          "name": "DELAY",
+          "type": "parameter",
+          "value": "3",
+          "declared_at_line": 13
+        }
+      ],
+      "enums": [],
+      "state_signals": []
+    }
+  }
+}

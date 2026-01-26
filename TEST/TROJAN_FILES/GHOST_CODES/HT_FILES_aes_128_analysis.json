@@ -1,0 +1,147 @@
+{
+  "folder": "HT_FILES_aes_128",
+  "full_path": "/Users/shresthshankhdhar/Documents/RESEARCH/HT_DES/TEST/TROJAN_FILES/GHOST_CODES/HT_FILES_aes_128",
+  "timestamp": "2025-10-10T07:58:29.256860",
+  "total_files": 12,
+  "files": [
+    {
+      "file": "complete_with_chunk_002_HT2_Leakage_36_HT2_Leakage.v",
+      "relative_path": "complete_with_chunk_002_HT2_Leakage_36_HT2_Leakage.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "complete_with_chunk_003_HT3_Performance_82_HT3_Performance.sv",
+      "relative_path": "complete_with_chunk_003_HT3_Performance_82_HT3_Performance.sv",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": 0.6410098075866699,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.6410098075866699,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.3589901626110077
+    },
+    {
+      "file": "complete_with_chunk_003_HT2_Leakage_85_HT2_Leakage.sv",
+      "relative_path": "complete_with_chunk_003_HT2_Leakage_85_HT2_Leakage.sv",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "complete_with_chunk_002_HT1_Crypto_32_HT1_Crypto.v",
+      "relative_path": "complete_with_chunk_002_HT1_Crypto_32_HT1_Crypto.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "complete_with_chunk_003_HT2_Leakage_87_HT2_Leakage.sv",
+      "relative_path": "complete_with_chunk_003_HT2_Leakage_87_HT2_Leakage.sv",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": 0.6410098075866699,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.6410098075866699,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.3589901626110077
+    },
+    {
+      "file": "aes_128_HT1_gpt-4_A1_GHOST.v",
+      "relative_path": "aes_128_HT1_gpt-4_A1_GHOST.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "complete_with_chunk_003_HT1_Crypto_76_HT1_Crypto.sv",
+      "relative_path": "complete_with_chunk_003_HT1_Crypto_76_HT1_Crypto.sv",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "complete_with_chunk_002_HT3_Performance_30_HT3_Performance.sv",
+      "relative_path": "complete_with_chunk_002_HT3_Performance_30_HT3_Performance.sv",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "complete_with_chunk_002_HT1_Crypto_48_HT1_Crypto.v",
+      "relative_path": "complete_with_chunk_002_HT1_Crypto_48_HT1_Crypto.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "aes_128.v",
+      "relative_path": "aes_128.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": 0.9809452295303345,
+      "ast_prediction": "CLEAN",
+      "ensemble_confidence": 0.9809452295303345,
+      "ensemble_prediction": "CLEAN",
+      "trojan_probability": 0.019054731354117393
+    },
+    {
+      "file": "aes_128_HT3_gpt-4_A1__GHOST.v",
+      "relative_path": "aes_128_HT3_gpt-4_A1__GHOST.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    },
+    {
+      "file": "aes_128_HT2_gpt-4_A1_GHOST.v",
+      "relative_path": "aes_128_HT2_gpt-4_A1_GHOST.v",
+      "dfg_confidence": -1.0,
+      "dfg_prediction": "ERROR",
+      "ast_confidence": -1.0,
+      "ast_prediction": "ERROR",
+      "ensemble_confidence": -1.0,
+      "ensemble_prediction": "ERROR",
+      "trojan_probability": -1.0
+    }
+  ],
+  "summary": {
+    "total_analyzed": 12,
+    "trojans_detected": 0,
+    "clean_designs": 3,
+    "errors": 9,
+    "avg_trojan_probability": -0.6885804119519889
+  }
+}

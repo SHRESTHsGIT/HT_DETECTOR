@@ -1,0 +1,76 @@
+{
+  "file_metadata": {
+    "source_file": "uart_rx.v",
+    "total_chunks_analyzed": 2,
+    "chunks_with_rare_regions": 1,
+    "total_rare_regions": 5,
+    "analysis_timestamp": "2025-10-08T13:34:51.945374"
+  },
+  "rare_regions": [
+    {
+      "chunk_id": "chunk_002",
+      "rare_region_type": "RESET/INITIALIZATION",
+      "rare_region_code": "integer i = 0;\nalways @(posedge clk) begin : p_received_data\n    if(!resetn) begin\n        received_data <= {PAYLOAD_BITS{1'b0}};\n    end else if(fsm_state == FSM_IDLE) begin\n        received_data <= {PAYLOAD_BITS{1'b0}};\n    end else if(fsm_state == FSM_RECV && next_bit) begin\n        received_data[PAYLOAD_BITS-1] <= bit_sample;\n        for (i = PAYLOAD_BITS-2; i >= 0; i = i - 1) begin\n            received_data[i] <= received_data[i+1];\n        end\n    end\nend",
+      "activation_trigger": "Asynchronous reset (resetn deasserted) or FSM entering IDLE; occurs during system reset or re-initialization.",
+      "confidence_score": 0.95,
+      "description": "Reset branch clears the received_data register. Reset paths are typically rare (only on power-up or explicit reset) and are important initialization regions. The branch that zeroes received_data when fsm_state == FSM_IDLE is also only taken at idle entry and thus executes infrequently compared to the main receive loop.",
+      "line_in_chunk": 63,
+      "absolute_line": 72,
+      "matched_line_content": "integer i = 0;",
+      "match_type": "first_line_exact",
+      "line_range": "63-75"
+    },
+    {
+      "chunk_id": "chunk_002",
+      "rare_region_type": "BYTE-COMPLETE / BREAK DETECTION",
+      "rare_region_code": "assign uart_rx_break = uart_rx_valid && ~|received_data;\nassign uart_rx_valid = fsm_state == FSM_STOP && n_fsm_state == FSM_IDLE;",
+      "activation_trigger": "Transition from FSM_STOP to FSM_IDLE (byte/frame completion) and received_data being all zeros for break detection.",
+      "confidence_score": 0.9,
+      "description": "uart_rx_valid becomes true only when the FSM is finishing reception (FSM_STOP -> FSM_IDLE). This byte-complete event is relatively infrequent compared to the continuous clocking logic. uart_rx_break is true only when a valid byte is detected and the received payload is all zeros \u2014 a UART BREAK condition which is an uncommon special-case.",
+      "line_in_chunk": 37,
+      "absolute_line": 46,
+      "matched_line_content": "assign uart_rx_break = uart_rx_valid && ~|received_data;",
+      "match_type": "first_line_exact",
+      "line_range": "37-38"
+    },
+    {
+      "chunk_id": "chunk_002",
+      "rare_region_type": "FSM DEFAULT / ERROR-FALLBACK",
+      "rare_region_code": "always @(*) begin : p_n_fsm_state\n    case(fsm_state)\n        FSM_IDLE : n_fsm_state = rxd_reg      ? FSM_IDLE : FSM_START;\n        FSM_START: n_fsm_state = next_bit     ? FSM_RECV : FSM_START;\n        FSM_RECV : n_fsm_state = payload_done ? FSM_STOP : FSM_RECV ;\n        FSM_STOP : n_fsm_state = next_bit     ? FSM_IDLE : FSM_STOP ;\n        default  : n_fsm_state = FSM_IDLE;\n    endcase\nend",
+      "activation_trigger": "fsm_state taking an undefined value not covered by explicit cases (default branch).",
+      "confidence_score": 0.78,
+      "description": "The default case in the FSM is a fallback that forces the next state to FSM_IDLE. Reaching the default case indicates an unexpected or invalid FSM state and is therefore rare; it's an error-recovery / safety path.",
+      "line_in_chunk": 53,
+      "absolute_line": 62,
+      "matched_line_content": "always @(*) begin : p_n_fsm_state",
+      "match_type": "first_line_exact",
+      "line_range": "53-61"
+    },
+    {
+      "chunk_id": "chunk_002",
+      "rare_region_type": "RX SAMPLE GATING (ENABLE-DRIVEN)",
+      "rare_region_code": "always @(posedge clk) begin : p_rxd_reg\n    if(!resetn) begin\n        rxd_reg     <= 1'b1;\n        rxd_reg_0   <= 1'b1;\n    \n    end else if(uart_rx_en) begin\n        rxd_reg     <= rxd_reg_0;\n        rxd_reg_0   <= uart_rxd;\n    end\nend",
+      "activation_trigger": "Either system reset, or when uart_rx_en is asserted to enable sampling of uart_rxd.",
+      "confidence_score": 0.88,
+      "description": "Sampling of the serial input is gated by uart_rx_en. The reset branch sets default idle levels and occurs rarely. The sampling branch executes only when uart_rx_en is high \u2014 if that enable is normally low, this path is infrequent. This block also contains initialization on reset (rare).",
+      "line_in_chunk": 115,
+      "absolute_line": 124,
+      "matched_line_content": "always @(posedge clk) begin : p_rxd_reg",
+      "match_type": "first_line_exact",
+      "line_range": "115-124"
+    },
+    {
+      "chunk_id": "chunk_002",
+      "rare_region_type": "BIT-TIMING COUNTER ROLLOVER / NEXT-BIT EVENT",
+      "rare_region_code": "always @(posedge clk) begin : p_cycle_counter\n    if(!resetn) begin\n        cycle_counter <= {COUNT_REG_LEN{1'b0}};\n    end else if(next_bit) begin\n        cycle_counter <= {COUNT_REG_LEN{1'b0}};\n    end else if(fsm_state == FSM_START || \n                fsm_state == FSM_RECV  || \n                fsm_state == FSM_STOP   ) begin\n        cycle_counter <= cycle_counter + 1'b1;\n    end\nend",
+      "activation_trigger": "next_bit condition (cycle_counter reaches CYCLES_PER_BIT or middle-of-stop condition) causing counter reset; occurs once per received bit timing interval.",
+      "confidence_score": 0.83,
+      "description": "The next_bit condition triggers counter reset and is evaluated at baud-timing boundaries. Although it occurs repeatedly during an active byte reception, it is infrequent relative to per-clock activity (only at bit boundaries) and is a timing-sensitive path (potentially interesting as a rare-event boundary). The reset branch is also rare.",
+      "line_in_chunk": 95,
+      "absolute_line": 104,
+      "matched_line_content": "always @(posedge clk) begin : p_cycle_counter",
+      "match_type": "first_line_exact",
+      "line_range": "95-105"
+    }
+  ]
+}
